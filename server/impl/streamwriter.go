@@ -22,6 +22,13 @@ func (w *StreamWriter) WriteUint32(n uint32) error {
 	return w.WriteBytes(buf)
 }
 
+// WriteUint64 writes uint64
+func (w *StreamWriter) WriteUint64(n uint64) error {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, n)
+	return w.WriteBytes(buf)
+}
+
 // WriteBytes writes bytes
 func (w *StreamWriter) WriteBytes(bytes []byte) error {
 	size := len(bytes)

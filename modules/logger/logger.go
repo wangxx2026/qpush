@@ -14,3 +14,8 @@ func Info(msg ...interface{}) {
 func Error(msg ...interface{}) {
 	fmt.Fprintln(os.Stderr, msg...)
 }
+
+// Debug prints to stderr
+func Debug(msg ...interface{}) {
+	fmt.Fprintln(os.Stderr, msg...)
+}

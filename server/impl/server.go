@@ -137,9 +137,10 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 			return
 		default:
 		}
+
 		size, err := r.ReadUint32()
 		if err != nil {
-			logger.Error(fmt.Printf("ReadUint32 failed:%s", err))
+			logger.Error(fmt.Sprintf("ReadUint32 failed:%s", err))
 			return
 		}
 
@@ -151,7 +152,7 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 		payload := make([]byte, size)
 		err = r.ReadBytes(payload)
 		if err != nil {
-			logger.Error(fmt.Printf("ReadBytes failed:%s", err))
+			logger.Error(fmt.Sprintf("ReadBytes failed:%s", err))
 			return
 		}
 
@@ -160,30 +161,37 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 		m := make(map[string]interface{})
 		json.Unmarshal(payload[8:], &m)
 
-		if cmd, ok := m["cmd"]; !ok {
-			logger.Error(fmt.Printf("invalid payload:%s", string(payload)))
+		var (
+			cmd interface{}
+			ok  bool
+		)
+		if cmd, ok = m["cmd"]; !ok {
+			logger.Error(fmt.Sprintf("invalid payload:%s", string(payload)))
 			return
-		} else {
-			params := server.CmdParam{Param: m, Server: s, Conn: conn}
-			response, err := s.handler.Call(cmd.(string), internal, &params)
-			if err != nil {
-				logger.Error("handler.Call return error:%s", err)
-				return
-			}
-
-			if response == nil {
-				continue
-			}
-
-			jsonResponse, err := json.Marshal(response)
-			if err != nil {
-				logger.Error("json.Marshal fail:%s", err)
-				return
-			}
-
-			packet := makeResponsePacket(requestID, jsonResponse)
-			writeChan <- packet
 		}
+
+		params := server.CmdParam{Param: m, Server: s, Conn: conn}
+
+		response, err := s.handler.Call(cmd.(string), internal, &params)
+		if err != nil {
+			logger.Error("handler.Call return error:%s", err)
+			return
+		}
+
+		if response == nil {
+			continue
+		}
+
+		jsonResponse, err := json.Marshal(response)
+		if err != nil {
+			logger.Error("json.Marshal fail:%s", err)
+			return
+		}
+
+		logger.Debug("response is ", string(jsonResponse))
+
+		packet := makeResponsePacket(requestID, jsonResponse)
+		writeChan <- packet
 
 	}
 

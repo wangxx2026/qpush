@@ -30,7 +30,7 @@ func (h *ServerHandler) Call(cmd string, internal bool, param *server.CmdParam) 
 		cmdHandler, ok = h.cmdHandlers.Load(cmd)
 	}
 	if !ok {
-		logger.Error(fmt.Printf("cmd not exists:%s", cmd))
+		logger.Error(fmt.Sprintf("cmd not exists:%s", cmd))
 		return nil, errCmdNotExists
 	}
 	return cmdHandler.(server.CmdHandler).Call(param)
