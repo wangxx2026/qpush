@@ -18,6 +18,7 @@ import (
 type Server struct {
 	connWriteChans sync.Map
 	guidConn       sync.Map
+	connGUID       sync.Map
 	readBufferSize int
 	handler        server.Handler
 }
@@ -64,6 +65,13 @@ func (s *Server) ListenAndServe(address string, internalAddress string) error {
 	wg.Wait()
 
 	return nil
+}
+
+// Walk walks each connection
+func (s *Server) Walk(f func(net.Conn, chan []byte) bool) {
+	s.connWriteChans.Range(func(k, v interface{}) bool {
+		return f(k.(net.Conn), v.(chan []byte))
+	})
 }
 
 func (s *Server) handleSignal(quitChan chan os.Signal, done chan bool) {
@@ -156,8 +164,8 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 			logger.Error(fmt.Printf("invalid payload:%s", string(payload)))
 			return
 		} else {
-			params := server.CmdParam{}
-			response, err := s.handler.Call(cmd.(string), false, &params)
+			params := server.CmdParam{Param: m, Server: s, Conn: conn}
+			response, err := s.handler.Call(cmd.(string), internal, &params)
 			if err != nil {
 				logger.Error("handler.Call return error:%s", err)
 				return

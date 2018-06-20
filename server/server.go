@@ -1,8 +1,11 @@
 package server
 
+import "net"
+
 // Server is interface for server
 type Server interface {
 	ListenAndServe(address string, internalAddress string) error
+	Walk(f func(net.Conn, chan []byte) bool)
 }
 
 // Config is config for Server
@@ -13,11 +16,12 @@ type Config struct {
 
 // CmdParam wraps param for cmd
 type CmdParam struct {
-	param  map[string]interface{}
-	server interface{}
+	Param  map[string]interface{}
+	Conn   net.Conn
+	Server Server
 }
 
-// ServerHandler is handle for Server
+// Handler is handle for Server
 type Handler interface {
 	Call(cmd string, internal bool, param *CmdParam) (interface{}, error)
 
