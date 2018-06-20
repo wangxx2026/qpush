@@ -7,8 +7,8 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"push-msg/conf"
 	"push-msg/modules/logger"
+	"push-msg/server"
 	"sync"
 	"syscall"
 	"time"
@@ -19,7 +19,7 @@ type Server struct {
 	connWriteChans sync.Map
 	guidConn       sync.Map
 	readBufferSize int
-	handler        conf.ServerHandler
+	handler        server.Handler
 }
 
 const (
@@ -28,14 +28,14 @@ const (
 )
 
 // NewServer creates a server instance
-func NewServer(c *conf.ServerConfig) *Server {
+func NewServer(c *server.Config) *Server {
 	var (
 		readBufferSize int
-		handler        conf.ServerHandler
+		handler        server.Handler
 	)
 	if c == nil {
-		readBufferSize = conf.DefaultReadBufferSize
-		handler = conf.DefaultServerHandler
+		readBufferSize = server.DefaultReadBufferSize
+		handler = &ServerHandler{}
 	} else {
 		readBufferSize = c.ReadBufferSize
 		handler = c.Handler
@@ -156,7 +156,7 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 			logger.Error(fmt.Printf("invalid payload:%s", string(payload)))
 			return
 		} else {
-			params := conf.CmdParam{}
+			params := server.CmdParam{}
 			response, err := s.handler.Call(cmd.(string), false, &params)
 			if err != nil {
 				logger.Error("handler.Call return error:%s", err)

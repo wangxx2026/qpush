@@ -1,18 +1,19 @@
 package main
 
 import (
-	"push-msg/conf"
 	"push-msg/server"
 	"push-msg/server/cmd"
+	"push-msg/server/impl"
 )
 
 func main() {
-	conf.DefaultServerHandler.RegisterCmd("login", false, &cmd.LoginCmd{})
+	serverHandler := &impl.ServerHandler{}
+	serverHandler.RegisterCmd("login", false, &cmd.LoginCmd{})
 
-	serverConfig := conf.ServerConfig{
-		ReadBufferSize: conf.DefaultReadBufferSize,
-		Handler:        conf.DefaultServerHandler}
+	serverConfig := server.Config{
+		ReadBufferSize: server.DefaultReadBufferSize,
+		Handler:        serverHandler}
 
-	s := server.New(&serverConfig)
+	s := impl.NewServer(&serverConfig)
 	s.ListenAndServe("localhost:8888", "localhost:8890")
 }
