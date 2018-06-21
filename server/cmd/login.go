@@ -30,6 +30,8 @@ func (cmd *LoginCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, erro
 	param.Ctx.GUID = []byte(loginCmd.GUID)
 
 	// TODO fetch offline messages
+	// client := http.Client{Timeout: 3*time.Second}
+	// resp, err := client.Get("http://example.com")
 
 	return server.LoginRespCmd, "hello", nil
 }

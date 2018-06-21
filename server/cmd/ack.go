@@ -3,9 +3,11 @@ package cmd
 import (
 	"encoding/json"
 	"errors"
+	"net/url"
 	"qpush/client"
 	"qpush/modules/logger"
 	"qpush/server"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -76,14 +78,15 @@ func (cmd *AckCmd) syncAck() {
 		}
 		cmd.lock.Lock()
 
-		ackData := make(map[string]int)
+		ackData := make(url.Values)
 		for guid, offset := range cmd.queuedAck {
-			ackData[guid] = offset
+			ackData.Set(guid, strconv.Itoa(offset))
 		}
 
 		cmd.queuedAck = make(map[string]int)
 		cmd.lock.Unlock()
 
 		// TODO send ackData
+
 	}
 }
