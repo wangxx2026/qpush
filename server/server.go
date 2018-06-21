@@ -6,7 +6,6 @@ import "net"
 type Server interface {
 	ListenAndServe(address string, internalAddress string) error
 	Walk(f func(net.Conn, chan []byte) bool)
-	MakePacket(requestID uint64, payload []byte) []byte
 }
 
 // Config is config for Server

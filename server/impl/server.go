@@ -75,7 +75,7 @@ func (s *Server) Walk(f func(net.Conn, chan []byte) bool) {
 }
 
 // MakePacket generate packet
-func (s *Server) MakePacket(requestID uint64, payload []byte) []byte {
+func MakePacket(requestID uint64, payload []byte) []byte {
 	length := 8 + uint32(len(payload))
 	buf := make([]byte, 4+length)
 	binary.BigEndian.PutUint32(buf, length)
@@ -201,7 +201,7 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 
 		logger.Debug("requestID is", requestID, "response is ", string(jsonResponse))
 
-		packet := s.MakePacket(requestID, jsonResponse)
+		packet := MakePacket(requestID, jsonResponse)
 		logger.Debug("packet is", packet)
 		writeChan <- packet
 

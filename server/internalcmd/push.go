@@ -5,6 +5,7 @@ import (
 	"net"
 	"push-msg/modules/logger"
 	"push-msg/server"
+	"push-msg/server/impl"
 	"time"
 )
 
@@ -25,7 +26,7 @@ func (cmd *PushCmd) Call(param *server.CmdParam) (interface{}, error) {
 	if err != nil {
 		return false, err
 	}
-	packet := server.MakePacket(param.RequestID, message)
+	packet := impl.MakePacket(param.RequestID, message)
 	server.Walk(func(conn net.Conn, writeChan chan []byte) bool {
 		if selfConn != conn {
 			select {
