@@ -15,8 +15,3 @@ type PushCmd struct {
 	MsgID   int    `json:"msg_id"`
 	Message string `json:"message"`
 }
-
-// AckCmd is for ack of message
-type AckCmd struct {
-	MsgID int `json:"msg_id"`
-}

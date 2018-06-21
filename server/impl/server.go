@@ -18,7 +18,7 @@ import (
 type Server struct {
 	connWriteChans sync.Map
 	guidConn       sync.Map
-	connGUID       sync.Map
+	connCtx        sync.Map
 	readBufferSize int
 	handler        server.Handler
 }
@@ -72,6 +72,16 @@ func (s *Server) Walk(f func(net.Conn, chan []byte) bool) {
 	s.connWriteChans.Range(func(k, v interface{}) bool {
 		return f(k.(net.Conn), v.(chan []byte))
 	})
+}
+
+// GetCtx return the ctx for connection
+func (s *Server) GetCtx(conn net.Conn) *server.ConnectionCtx {
+	ctx, ok := s.connCtx.Load(conn)
+	if !ok {
+		return nil
+	}
+
+	return ctx.(*server.ConnectionCtx)
 }
 
 // MakePacket generate packet
@@ -134,6 +144,9 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 	defer s.closeConnection(conn)
 	defer wg.Done()
 
+	ctx := &server.ConnectionCtx{Internal: internal}
+	//for query from other G
+	s.connCtx.Store(conn, ctx)
 	writeChan := make(chan []byte, 30)
 	s.connWriteChans.Store(conn, writeChan)
 
@@ -170,7 +183,7 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 		requestID := binary.BigEndian.Uint64(payload)
 		cmd := server.Cmd(binary.BigEndian.Uint32(payload[8:]))
 
-		params := server.CmdParam{Param: payload[12:], Server: s, Conn: conn, RequestID: requestID}
+		params := server.CmdParam{Param: payload[12:], Server: s, Conn: conn, RequestID: requestID, Ctx: ctx}
 
 		logger.Debug("cmdParam is", string(payload[12:]))
 		responseCmd, response, err := s.handler.Call(cmd, internal, &params)
@@ -209,10 +222,20 @@ func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte) {
 		}
 
 		logger.Debug("WriteBytes called", bytes)
-		w.WriteBytes(bytes)
+		err := w.WriteBytes(bytes)
+		if err != nil {
+			s.closeConnection(conn)
+			return
+		}
 	}
 }
+
 func (s *Server) closeConnection(conn net.Conn) {
 	s.connWriteChans.Delete(conn)
+	ctx, ok := s.connCtx.Load(conn)
+	if ok && ctx.(*server.ConnectionCtx).GUID != nil {
+		s.guidConn.Delete(ctx.(*server.ConnectionCtx).GUID)
+	}
+	s.connCtx.Delete(conn)
 	conn.Close()
 }

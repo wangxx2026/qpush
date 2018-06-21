@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"qpush/client"
 	"qpush/modules/logger"
 	"qpush/server"
 	simpl "qpush/server/impl"
@@ -19,10 +20,6 @@ func NewClient() *Client {
 	return &Client{}
 }
 
-type loginCmd struct {
-	GUID string `json:"guid"`
-}
-
 // Dial is called to initiate connections
 func (cli *Client) Dial(address string, guid string) *MsgConnection {
 	conn, err := net.Dial("tcp", address)
@@ -32,7 +29,7 @@ func (cli *Client) Dial(address string, guid string) *MsgConnection {
 	}
 
 	mc := &MsgConnection{conn: conn}
-	cmd := &loginCmd{GUID: guid}
+	cmd := &client.LoginCmd{GUID: guid}
 	_, err = mc.SendCmd(server.LoginCmd, cmd)
 	if err != nil {
 		logger.Error("failed to send login cmd", err)

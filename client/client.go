@@ -17,3 +17,13 @@ type MsgConnection interface {
 	SendCmd(cmd string, cmdParam interface{}) (uint64, error)
 	Subscribe(cb OnResponse) error
 }
+
+// LoginCmd is for login
+type LoginCmd struct {
+	GUID string `json:"guid"`
+}
+
+// AckCmd is for ack of message
+type AckCmd struct {
+	MsgID int `json:"msg_id"`
+}

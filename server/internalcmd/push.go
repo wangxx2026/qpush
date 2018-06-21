@@ -26,6 +26,10 @@ func (cmd *PushCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 	packet := impl.MakePacket(param.RequestID, server.ForwardCmd, message)
 	s.Walk(func(conn net.Conn, writeChan chan []byte) bool {
 		if selfConn != conn {
+			ctx := s.GetCtx(conn)
+			if ctx.Internal {
+				return true
+			}
 			select {
 			case writeChan <- packet:
 			case <-time.After(DefaultWriteTimeout):

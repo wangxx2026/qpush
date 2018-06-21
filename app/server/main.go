@@ -10,6 +10,7 @@ import (
 func main() {
 	serverHandler := &impl.ServerHandler{}
 	serverHandler.RegisterCmd(server.LoginCmd, false, &cmd.LoginCmd{})
+	serverHandler.RegisterCmd(server.AckCmd, false, cmd.NewAckCmd())
 
 	serverHandler.RegisterCmd(server.PushCmd, true, &internalcmd.PushCmd{})
 

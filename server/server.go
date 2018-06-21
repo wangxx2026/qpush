@@ -6,6 +6,7 @@ import "net"
 type Server interface {
 	ListenAndServe(address string, internalAddress string) error
 	Walk(f func(net.Conn, chan []byte) bool)
+	GetCtx(net.Conn) *ConnectionCtx
 }
 
 // Config is config for Server
@@ -30,12 +31,17 @@ const (
 	ForwardCmd
 	// NoCmd is like 404 for http
 	NoCmd
+	// AckCmd is for ack msg
+	AckCmd
+	// ErrorCmd
+	ErrorCmd
 )
 
 // CmdParam wraps param for cmd
 type CmdParam struct {
 	Param     []byte
 	Conn      net.Conn
+	Ctx       *ConnectionCtx
 	Server    Server
 	RequestID uint64
 }
@@ -50,6 +56,12 @@ type Handler interface {
 // CmdHandler is handler for cmd
 type CmdHandler interface {
 	Call(param *CmdParam) (Cmd, interface{}, error)
+}
+
+// ConnectionCtx is the context for connection
+type ConnectionCtx struct {
+	Internal bool
+	GUID     []byte
 }
 
 const (
