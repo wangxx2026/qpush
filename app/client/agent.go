@@ -23,12 +23,12 @@ func main() {
 	}
 
 	logger.Debug("d2")
-	cb := impl.NewCallBack(func(requestID uint64, cmd server.Cmd, bytes []byte) error {
+	cb := impl.NewCallBack(func(requestID uint64, cmd server.Cmd, bytes []byte) bool {
 		if ID == requestID {
 
 		}
 		logger.Info(requestID, cmd, string(bytes))
-		return nil
+		return true
 	})
 	logger.Debug("d3")
 	err = conn.Subscribe(cb)

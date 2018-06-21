@@ -13,9 +13,9 @@ func main() {
 		logger.Error("failed to dial")
 	}
 
-	cb := impl.NewCallBack(func(requestID uint64, cmd server.Cmd, bytes []byte) error {
+	cb := impl.NewCallBack(func(requestID uint64, cmd server.Cmd, bytes []byte) bool {
 		logger.Info(requestID, cmd, string(bytes))
-		return nil
+		return true
 	})
 	err := conn.Subscribe(cb)
 	logger.Error("Subscribe error", err)

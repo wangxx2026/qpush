@@ -80,9 +80,9 @@ func (mc *MsgConnection) Subscribe(cb *OnResponse) error {
 		requestID := binary.BigEndian.Uint64(payload)
 		cmd := server.Cmd(binary.BigEndian.Uint32(payload[8:]))
 
-		err = cb.Call(requestID, cmd, payload[8:])
-		if err != nil {
-			return err
+		ok := cb.Call(requestID, cmd, payload[8:])
+		if !ok {
+			return nil
 		}
 	}
 }
