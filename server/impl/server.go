@@ -74,6 +74,16 @@ func (s *Server) Walk(f func(net.Conn, chan []byte) bool) {
 	})
 }
 
+// MakePacket generate packet
+func (s *Server) MakePacket(requestID uint64, payload []byte) []byte {
+	length := 8 + uint32(len(payload))
+	buf := make([]byte, 4+length)
+	binary.BigEndian.PutUint32(buf, length)
+	binary.BigEndian.PutUint64(buf[4:], requestID)
+	copy(buf[12:], payload)
+	return buf
+}
+
 func (s *Server) handleSignal(quitChan chan os.Signal, done chan bool) {
 	<-quitChan
 	logger.Info("signal captured")
@@ -170,7 +180,8 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 			return
 		}
 
-		params := server.CmdParam{Param: m, Server: s, Conn: conn}
+		delete(m, "cmd")
+		params := server.CmdParam{Param: m, Server: s, Conn: conn, RequestID: requestID}
 
 		response, err := s.handler.Call(cmd.(string), internal, &params)
 		if err != nil {
@@ -190,21 +201,12 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 
 		logger.Debug("requestID is", requestID, "response is ", string(jsonResponse))
 
-		packet := makeResponsePacket(requestID, jsonResponse)
+		packet := s.MakePacket(requestID, jsonResponse)
 		logger.Debug("packet is", packet)
 		writeChan <- packet
 
 	}
 
-}
-
-func makeResponsePacket(requestID uint64, json []byte) []byte {
-	length := 8 + uint32(len(json))
-	buf := make([]byte, 4+length)
-	binary.BigEndian.PutUint32(buf, length)
-	binary.BigEndian.PutUint64(buf[4:], requestID)
-	copy(buf[12:], json)
-	return buf
 }
 
 func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte) {

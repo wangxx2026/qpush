@@ -11,7 +11,7 @@ func main() {
 	serverHandler := &impl.ServerHandler{}
 	serverHandler.RegisterCmd("login", false, &cmd.LoginCmd{})
 
-	serverHandler.RegisterCmd("forward", true, &internalcmd.ForwardCmd{})
+	serverHandler.RegisterCmd("push", true, &internalcmd.PushCmd{})
 
 	serverConfig := server.Config{
 		ReadBufferSize: server.DefaultReadBufferSize,

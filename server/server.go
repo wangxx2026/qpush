@@ -6,6 +6,7 @@ import "net"
 type Server interface {
 	ListenAndServe(address string, internalAddress string) error
 	Walk(f func(net.Conn, chan []byte) bool)
+	MakePacket(requestID uint64, payload []byte) []byte
 }
 
 // Config is config for Server
@@ -16,9 +17,10 @@ type Config struct {
 
 // CmdParam wraps param for cmd
 type CmdParam struct {
-	Param  map[string]interface{}
-	Conn   net.Conn
-	Server Server
+	Param     map[string]interface{}
+	Conn      net.Conn
+	Server    Server
+	RequestID uint64
 }
 
 // Handler is handle for Server

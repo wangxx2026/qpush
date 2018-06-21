@@ -13,7 +13,7 @@ func main() {
 	}
 
 	cb := impl.NewCallBack(func(requestID uint64, bytes []byte) error {
-		logger.Info(requestID, bytes)
+		logger.Info(requestID, string(bytes))
 		return nil
 	})
 	err := conn.Subscribe(cb)

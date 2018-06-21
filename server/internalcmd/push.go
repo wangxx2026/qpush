@@ -1,14 +1,15 @@
 package internalcmd
 
 import (
+	"encoding/json"
 	"net"
 	"push-msg/modules/logger"
 	"push-msg/server"
 	"time"
 )
 
-// ForwardCmd do login
-type ForwardCmd struct {
+// PushCmd do login
+type PushCmd struct {
 }
 
 const (
@@ -17,13 +18,18 @@ const (
 )
 
 // Call implements CmdHandler
-func (cmd *ForwardCmd) Call(param *server.CmdParam) (interface{}, error) {
+func (cmd *PushCmd) Call(param *server.CmdParam) (interface{}, error) {
 	server := param.Server
 	selfConn := param.Conn
+	message, err := json.Marshal(param.Param)
+	if err != nil {
+		return false, err
+	}
+	packet := server.MakePacket(param.RequestID, message)
 	server.Walk(func(conn net.Conn, writeChan chan []byte) bool {
 		if selfConn != conn {
 			select {
-			case writeChan <- []byte("hello world"):
+			case writeChan <- packet:
 			case <-time.After(DefaultWriteTimeout):
 				logger.Error("timeout happend when writing writeChan")
 			}
@@ -32,5 +38,5 @@ func (cmd *ForwardCmd) Call(param *server.CmdParam) (interface{}, error) {
 		return true
 	})
 
-	return nil, nil
+	return true, nil
 }

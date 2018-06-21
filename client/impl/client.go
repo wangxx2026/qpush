@@ -53,6 +53,27 @@ type MsgConnection struct {
 	conn net.Conn
 }
 
+// SendCmd sends a cmd to server
+func (mc *MsgConnection) SendCmd(cmd string, cmdParam interface{}) (uint64, error) {
+	jsonBytes, err := json.Marshal(cmdParam)
+	if err != nil {
+		return 0, err
+	}
+	m := make(map[string]interface{})
+	logger.Debug("marshal json", string(jsonBytes))
+	err = json.Unmarshal(jsonBytes, &m)
+	if err != nil {
+		return 0, err
+	}
+	m["cmd"] = cmd
+	jsonBytes, err = json.Marshal(m)
+	if err != nil {
+		return 0, err
+	}
+	logger.Info("send bytes", string(jsonBytes))
+	return mc.Send(jsonBytes)
+}
+
 // Send a message to the underlying connection
 func (mc *MsgConnection) Send(jsonBytes []byte) (uint64, error) {
 	var requestID uint64

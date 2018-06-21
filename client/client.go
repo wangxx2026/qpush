@@ -1,14 +1,5 @@
 package client
 
-import (
-	"push-msg/client/impl"
-)
-
-// New creates a Client instance
-func New() Client {
-	return impl.NewClient()
-}
-
 // OnResponse is interface for client callback
 type OnResponse interface {
 	Call(uint64, bytes []byte) error
@@ -21,6 +12,7 @@ type Client interface {
 
 // MsgConnection is a connection to server
 type MsgConnection interface {
-	Send(jsonBytes []byte) （uint64, error)
+	SendCmd(cmd string, cmdParam interface{}) (uint64, error)
+	Send(jsonBytes []byte) (uint64, error)
 	Subscribe(cb OnResponse) error
 }
