@@ -4,6 +4,7 @@ import (
 	"push-msg/client"
 	"push-msg/client/impl"
 	"push-msg/modules/logger"
+	"push-msg/server"
 )
 
 func main() {
@@ -16,17 +17,17 @@ func main() {
 
 	logger.Debug("d1")
 	pushCmd := &client.PushCmd{MsgID: 1, Message: "hello world"}
-	ID, err := conn.SendCmd("push", pushCmd)
+	ID, err := conn.SendCmd(server.PushCmd, pushCmd)
 	if err != nil {
 		logger.Error("SendCmd failed:", err)
 	}
 
 	logger.Debug("d2")
-	cb := impl.NewCallBack(func(requestID uint64, bytes []byte) error {
+	cb := impl.NewCallBack(func(requestID uint64, cmd server.Cmd, bytes []byte) error {
 		if ID == requestID {
 
 		}
-		logger.Info(requestID, bytes)
+		logger.Info(requestID, cmd, string(bytes))
 		return nil
 	})
 	logger.Debug("d3")

@@ -14,9 +14,27 @@ type Config struct {
 	Handler        Handler
 }
 
+// Cmd is uint32
+type Cmd uint32
+
+const (
+	// LoginCmd is for outside
+	LoginCmd Cmd = iota
+	// LoginRespCmd is resp for login
+	LoginRespCmd
+	// PushCmd is for internal
+	PushCmd
+	// PushRespCmd is resp for push
+	PushRespCmd
+	// ForwardCmd is cmd when do forwarding
+	ForwardCmd
+	// NoCmd is like 404 for http
+	NoCmd
+)
+
 // CmdParam wraps param for cmd
 type CmdParam struct {
-	Param     map[string]interface{}
+	Param     []byte
 	Conn      net.Conn
 	Server    Server
 	RequestID uint64
@@ -24,14 +42,14 @@ type CmdParam struct {
 
 // Handler is handle for Server
 type Handler interface {
-	Call(cmd string, internal bool, param *CmdParam) (interface{}, error)
+	Call(cmd Cmd, internal bool, param *CmdParam) (Cmd, interface{}, error)
 
-	RegisterCmd(cmd string, internal bool, cmdHandler CmdHandler)
+	RegisterCmd(cmd Cmd, internal bool, cmdHandler CmdHandler)
 }
 
 // CmdHandler is handler for cmd
 type CmdHandler interface {
-	Call(param *CmdParam) (interface{}, error)
+	Call(param *CmdParam) (Cmd, interface{}, error)
 }
 
 const (

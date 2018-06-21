@@ -3,6 +3,7 @@ package main
 import (
 	"push-msg/client/impl"
 	"push-msg/modules/logger"
+	"push-msg/server"
 )
 
 func main() {
@@ -12,8 +13,8 @@ func main() {
 		logger.Error("failed to dial")
 	}
 
-	cb := impl.NewCallBack(func(requestID uint64, bytes []byte) error {
-		logger.Info(requestID, string(bytes))
+	cb := impl.NewCallBack(func(requestID uint64, cmd server.Cmd, bytes []byte) error {
+		logger.Info(requestID, cmd, string(bytes))
 		return nil
 	})
 	err := conn.Subscribe(cb)

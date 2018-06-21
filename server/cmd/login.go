@@ -10,7 +10,7 @@ type LoginCmd struct {
 }
 
 // Call implements CmdHandler
-func (cmd *LoginCmd) Call(param *server.CmdParam) (interface{}, error) {
+func (cmd *LoginCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error) {
 	logger.Info("LoginCmd called")
-	return "hello", nil
+	return server.LoginRespCmd, "hello", nil
 }

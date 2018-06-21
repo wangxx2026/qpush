@@ -19,7 +19,7 @@ type ServerHandler struct {
 }
 
 // Call is call by server
-func (h *ServerHandler) Call(cmd string, internal bool, param *server.CmdParam) (interface{}, error) {
+func (h *ServerHandler) Call(cmd server.Cmd, internal bool, param *server.CmdParam) (server.Cmd, interface{}, error) {
 	var (
 		cmdHandler interface{}
 		ok         bool
@@ -31,13 +31,13 @@ func (h *ServerHandler) Call(cmd string, internal bool, param *server.CmdParam) 
 	}
 	if !ok {
 		logger.Error(fmt.Sprintf("cmd not exists:%s", cmd))
-		return nil, errCmdNotExists
+		return server.NoCmd, nil, errCmdNotExists
 	}
 	return cmdHandler.(server.CmdHandler).Call(param)
 }
 
 // RegisterCmd registers cmd handler
-func (h *ServerHandler) RegisterCmd(cmd string, internal bool, cmdHandler server.CmdHandler) {
+func (h *ServerHandler) RegisterCmd(cmd server.Cmd, internal bool, cmdHandler server.CmdHandler) {
 	if internal {
 		h.internalCmdHandlers.Store(cmd, cmdHandler)
 	} else {

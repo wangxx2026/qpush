@@ -9,9 +9,9 @@ import (
 
 func main() {
 	serverHandler := &impl.ServerHandler{}
-	serverHandler.RegisterCmd("login", false, &cmd.LoginCmd{})
+	serverHandler.RegisterCmd(server.LoginCmd, false, &cmd.LoginCmd{})
 
-	serverHandler.RegisterCmd("push", true, &internalcmd.PushCmd{})
+	serverHandler.RegisterCmd(server.PushCmd, true, &internalcmd.PushCmd{})
 
 	serverConfig := server.Config{
 		ReadBufferSize: server.DefaultReadBufferSize,

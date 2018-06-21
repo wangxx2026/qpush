@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"push-msg/modules/logger"
+	"push-msg/server"
 	simpl "push-msg/server/impl"
 )
 
@@ -19,7 +20,6 @@ func NewClient() *Client {
 }
 
 type loginCmd struct {
-	Cmd  string `json:"cmd"`
 	GUID string `json:"guid"`
 }
 
@@ -32,19 +32,12 @@ func (cli *Client) Dial(address string, guid string) *MsgConnection {
 	}
 
 	mc := &MsgConnection{conn: conn}
-	cmd := &loginCmd{Cmd: "login", GUID: guid}
-	jsonBytes, err := json.Marshal(cmd)
-	logger.Info(string(jsonBytes))
+	cmd := &loginCmd{GUID: guid}
+	_, err = mc.SendCmd(server.LoginCmd, cmd)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed to marshal json:%s", err))
+		logger.Error("failed to send login cmd", err)
 		return nil
 	}
-	_, err = mc.Send(jsonBytes)
-	if err != nil {
-		logger.Error("login failed")
-		return nil
-	}
-	//TODO wait for reply
 	return mc
 }
 
@@ -54,38 +47,17 @@ type MsgConnection struct {
 }
 
 // SendCmd sends a cmd to server
-func (mc *MsgConnection) SendCmd(cmd string, cmdParam interface{}) (uint64, error) {
+func (mc *MsgConnection) SendCmd(cmd server.Cmd, cmdParam interface{}) (uint64, error) {
 	jsonBytes, err := json.Marshal(cmdParam)
 	if err != nil {
 		return 0, err
 	}
-	m := make(map[string]interface{})
-	logger.Debug("marshal json", string(jsonBytes))
-	err = json.Unmarshal(jsonBytes, &m)
-	if err != nil {
-		return 0, err
-	}
-	m["cmd"] = cmd
-	jsonBytes, err = json.Marshal(m)
-	if err != nil {
-		return 0, err
-	}
-	logger.Info("send bytes", string(jsonBytes))
-	return mc.Send(jsonBytes)
-}
-
-// Send a message to the underlying connection
-func (mc *MsgConnection) Send(jsonBytes []byte) (uint64, error) {
 	var requestID uint64
-
-	length := 8 + uint32(len(jsonBytes))
-	buf := make([]byte, 4+length)
-	binary.BigEndian.PutUint32(buf, length)
-	binary.BigEndian.PutUint64(buf[4:], requestID)
-	copy(buf[12:], jsonBytes)
+	packet := simpl.MakePacket(requestID, cmd, jsonBytes)
 
 	w := simpl.NewStreamWriter(mc.conn)
-	err := w.WriteBytes(buf)
+	err = w.WriteBytes(packet)
+
 	return requestID, err
 }
 
@@ -109,8 +81,9 @@ func (mc *MsgConnection) Subscribe(cb *OnResponse) error {
 		logger.Debug("test2")
 
 		requestID := binary.BigEndian.Uint64(payload)
+		cmd := server.Cmd(binary.BigEndian.Uint32(payload[8:]))
 
-		err = cb.Call(requestID, payload[8:])
+		err = cb.Call(requestID, cmd, payload[8:])
 		if err != nil {
 			return err
 		}

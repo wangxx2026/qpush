@@ -75,12 +75,13 @@ func (s *Server) Walk(f func(net.Conn, chan []byte) bool) {
 }
 
 // MakePacket generate packet
-func MakePacket(requestID uint64, payload []byte) []byte {
-	length := 8 + uint32(len(payload))
+func MakePacket(requestID uint64, cmd server.Cmd, payload []byte) []byte {
+	length := 12 + uint32(len(payload))
 	buf := make([]byte, 4+length)
 	binary.BigEndian.PutUint32(buf, length)
 	binary.BigEndian.PutUint64(buf[4:], requestID)
-	copy(buf[12:], payload)
+	binary.BigEndian.PutUint32(buf[12:], uint32(cmd))
+	copy(buf[16:], payload)
 	return buf
 }
 
@@ -154,7 +155,7 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 			return
 		}
 
-		if size < 8 {
+		if size < 16 {
 			logger.Error("invalid packet")
 			return
 		}
@@ -167,23 +168,12 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 		}
 
 		requestID := binary.BigEndian.Uint64(payload)
+		cmd := server.Cmd(binary.BigEndian.Uint32(payload[8:]))
 
-		m := make(map[string]interface{})
-		json.Unmarshal(payload[8:], &m)
+		params := server.CmdParam{Param: payload[12:], Server: s, Conn: conn, RequestID: requestID}
 
-		var (
-			cmd interface{}
-			ok  bool
-		)
-		if cmd, ok = m["cmd"]; !ok {
-			logger.Error(fmt.Sprintf("invalid payload:%s", string(payload)))
-			return
-		}
-
-		delete(m, "cmd")
-		params := server.CmdParam{Param: m, Server: s, Conn: conn, RequestID: requestID}
-
-		response, err := s.handler.Call(cmd.(string), internal, &params)
+		logger.Debug("cmdParam is", string(payload[12:]))
+		responseCmd, response, err := s.handler.Call(cmd, internal, &params)
 		if err != nil {
 			logger.Error("handler.Call return error:%s", err)
 			return
@@ -199,9 +189,8 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 			return
 		}
 
-		logger.Debug("requestID is", requestID, "response is ", string(jsonResponse))
-
-		packet := MakePacket(requestID, jsonResponse)
+		logger.Debug("requestID", requestID, "responseCmd", responseCmd, "jsonResponse", string(jsonResponse))
+		packet := MakePacket(requestID, responseCmd, jsonResponse)
 		logger.Debug("packet is", packet)
 		writeChan <- packet
 
