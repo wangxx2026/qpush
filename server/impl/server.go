@@ -26,6 +26,8 @@ type Server struct {
 const (
 	// DefaultAcceptTimeout is the default accept timeout duration
 	DefaultAcceptTimeout = 5 * time.Second
+	// DefaultReadTimeout is the default read timeout duration in seconds
+	DefaultReadTimeout = 60 // for prod maybe 10*60
 )
 
 // NewServer creates a server instance
@@ -150,7 +152,7 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 	writeChan := make(chan []byte, 30)
 	s.connWriteChans.Store(conn, writeChan)
 
-	r := NewStreamReader(conn)
+	r := NewStreamReaderWithTimeout(conn, DefaultReadTimeout)
 
 	go s.handleWrite(conn, writeChan)
 
