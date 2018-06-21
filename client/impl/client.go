@@ -55,12 +55,17 @@ type MsgConnection struct {
 
 // Send a message to the underlying connection
 func (mc *MsgConnection) Send(jsonBytes []byte) (uint64, error) {
-	var requestID uint64 = 0
+	var requestID uint64
+
+	length := 8 + uint32(len(jsonBytes))
+	buf := make([]byte, 4+length)
+	binary.BigEndian.PutUint32(buf, length)
+	binary.BigEndian.PutUint64(buf[4:], requestID)
+	copy(buf[12:], jsonBytes)
+
 	w := simpl.NewStreamWriter(mc.conn)
-	w.WriteUint32(uint32(8 + len(jsonBytes)))
-	w.WriteUint64(requestID)
-	w.WriteBytes(jsonBytes)
-	return requestID, nil
+	err := w.WriteBytes(buf)
+	return requestID, err
 }
 
 // Subscribe messages from the underlying connection
@@ -74,11 +79,13 @@ func (mc *MsgConnection) Subscribe(cb *OnResponse) error {
 			return err
 		}
 
+		logger.Debug("test1")
 		payload := make([]byte, size)
 		err = r.ReadBytes(payload)
 		if err != nil {
 			return err
 		}
+		logger.Debug("test2")
 
 		requestID := binary.BigEndian.Uint64(payload)
 

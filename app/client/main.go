@@ -16,6 +16,7 @@ func main() {
 		logger.Info(requestID, bytes)
 		return nil
 	})
-	conn.Subscribe(cb)
+	err := conn.Subscribe(cb)
+	logger.Error("Subscribe error", err)
 
 }

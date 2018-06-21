@@ -188,9 +188,10 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 			return
 		}
 
-		logger.Debug("response is ", string(jsonResponse))
+		logger.Debug("requestID is", requestID, "response is ", string(jsonResponse))
 
 		packet := makeResponsePacket(requestID, jsonResponse)
+		logger.Debug("packet is", packet)
 		writeChan <- packet
 
 	}
@@ -199,9 +200,9 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 
 func makeResponsePacket(requestID uint64, json []byte) []byte {
 	length := 8 + uint32(len(json))
-	buf := make([]byte, length)
+	buf := make([]byte, 4+length)
 	binary.BigEndian.PutUint32(buf, length)
-	binary.BigEndian.PutUint64(buf, requestID)
+	binary.BigEndian.PutUint64(buf[4:], requestID)
 	copy(buf[12:], json)
 	return buf
 }
@@ -210,9 +211,13 @@ func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte) {
 	w := NewStreamWriter(conn)
 	for {
 		bytes := <-writeChann
+
+		logger.Debug("writeChann fired")
 		if bytes == nil {
 			return
 		}
+
+		logger.Debug("WriteBytes called", bytes)
 		w.WriteBytes(bytes)
 	}
 }
