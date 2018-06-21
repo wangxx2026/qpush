@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"push-msg/modules/logger"
-	"push-msg/server"
+	"qpush/modules/logger"
+	"qpush/server"
 )
 
 // LoginCmd do login

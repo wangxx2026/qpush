@@ -1,6 +1,6 @@
 package client
 
-import "push-msg/server"
+import "qpush/server"
 
 // OnResponse is interface for client callback
 type OnResponse interface {

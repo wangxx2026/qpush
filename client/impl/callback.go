@@ -1,6 +1,6 @@
 package impl
 
-import "push-msg/server"
+import "qpush/server"
 
 // OnResponse is data struct for callback
 type OnResponse struct {

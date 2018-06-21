@@ -1,10 +1,10 @@
 package main
 
 import (
-	"push-msg/client"
-	"push-msg/client/impl"
-	"push-msg/modules/logger"
-	"push-msg/server"
+	"qpush/client"
+	"qpush/client/impl"
+	"qpush/modules/logger"
+	"qpush/server"
 )
 
 func main() {

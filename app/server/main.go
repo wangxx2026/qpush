@@ -1,10 +1,10 @@
 package main
 
 import (
-	"push-msg/server"
-	"push-msg/server/cmd"
-	"push-msg/server/impl"
-	"push-msg/server/internalcmd"
+	"qpush/server"
+	"qpush/server/cmd"
+	"qpush/server/impl"
+	"qpush/server/internalcmd"
 )
 
 func main() {

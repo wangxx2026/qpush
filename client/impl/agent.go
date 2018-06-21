@@ -3,7 +3,7 @@ package impl
 import (
 	"fmt"
 	"net"
-	"push-msg/modules/logger"
+	"qpush/modules/logger"
 )
 
 // Agent is data structor for client

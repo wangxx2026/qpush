@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"push-msg/modules/logger"
-	"push-msg/server"
-	simpl "push-msg/server/impl"
+	"qpush/modules/logger"
+	"qpush/server"
+	simpl "qpush/server/impl"
 )
 
 // Client is data structor for client

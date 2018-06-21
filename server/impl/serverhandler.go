@@ -3,8 +3,8 @@ package impl
 import (
 	"errors"
 	"fmt"
-	"push-msg/modules/logger"
-	"push-msg/server"
+	"qpush/modules/logger"
+	"qpush/server"
 	"sync"
 )
 

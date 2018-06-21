@@ -2,9 +2,9 @@ package internalcmd
 
 import (
 	"net"
-	"push-msg/modules/logger"
-	"push-msg/server"
-	"push-msg/server/impl"
+	"qpush/modules/logger"
+	"qpush/server"
+	"qpush/server/impl"
 	"time"
 )
 
