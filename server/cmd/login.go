@@ -33,5 +33,5 @@ func (cmd *LoginCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, erro
 	// client := http.Client{Timeout: 3*time.Second}
 	// resp, err := client.Get("http://example.com")
 
-	return server.LoginRespCmd, "hello", nil
+	return server.LoginRespCmd, true, nil
 }

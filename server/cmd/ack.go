@@ -67,7 +67,7 @@ func (cmd *AckCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error)
 	}
 
 	logger.Info("AckCmd called")
-	return server.AckCmd, "hello", nil
+	return server.AckRespCmd, true, nil
 }
 
 func (cmd *AckCmd) syncAck() {

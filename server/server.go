@@ -33,6 +33,8 @@ const (
 	NoCmd
 	// AckCmd is for ack msg
 	AckCmd
+	// AckRespCmd is resp for ack
+	AckRespCmd
 	// ErrorCmd
 	ErrorCmd
 )
