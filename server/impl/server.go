@@ -27,7 +27,9 @@ const (
 	// DefaultAcceptTimeout is the default accept timeout duration
 	DefaultAcceptTimeout = 5 * time.Second
 	// DefaultReadTimeout is the default read timeout duration in seconds
-	DefaultReadTimeout = 60 // for prod maybe 10*60
+	DefaultReadTimeout = 60 // TODO for prod maybe 10*60
+	// DefaultWriteTimeout is default timeout for write
+	DefaultWriteTimeout = time.Second * 10
 )
 
 // NewServer creates a server instance

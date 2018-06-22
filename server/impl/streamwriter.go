@@ -3,16 +3,28 @@ package impl
 import (
 	"encoding/binary"
 	"net"
+	"time"
 )
 
 // StreamWriter write data to socket
 type StreamWriter struct {
-	conn net.Conn
+	conn    net.Conn
+	timeout int
 }
+
+const (
+	// WriteNoTimeout will never timeout
+	WriteNoTimeout = -1
+)
 
 // NewStreamWriter new instance
 func NewStreamWriter(conn net.Conn) *StreamWriter {
-	return &StreamWriter{conn: conn}
+	return &StreamWriter{conn: conn, timeout: WriteNoTimeout}
+}
+
+// NewStreamWriterWithTimeout new instance with timeout
+func NewStreamWriterWithTimeout(conn net.Conn, timeout int) *StreamWriter {
+	return &StreamWriter{conn: conn, timeout: timeout}
 }
 
 // WriteUint32 writes uint32
@@ -34,6 +46,10 @@ func (w *StreamWriter) WriteBytes(bytes []byte) error {
 	size := len(bytes)
 
 	offset := 0
+
+	if w.timeout > 0 {
+		w.conn.SetWriteDeadline(time.Now().Add(time.Duration(w.timeout) * time.Second))
+	}
 	for {
 		nw, err := w.conn.Write(bytes[offset:])
 		if err != nil {
