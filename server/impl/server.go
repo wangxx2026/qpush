@@ -17,7 +17,7 @@ import (
 // Server is data struct for server
 type Server struct {
 	connWriteChans sync.Map
-	guidConn       sync.Map // [string]net.Conn
+	guidConn       sync.Map // [string]net.Conn //TODO think if needs to change *
 	connCtx        sync.Map // [net.Conn]*ConnectionCtx
 	readBufferSize int
 	handler        server.Handler
