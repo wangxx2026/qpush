@@ -5,11 +5,6 @@ type Agent interface {
 	Dial(address string) MsgConnection
 }
 
-const (
-	// PushCmdName is name of push cmd
-	PushCmdName = "push"
-)
-
 // PushCmd is struct for push
 type PushCmd struct {
 	MsgID   int    `json:"msg_id"`
