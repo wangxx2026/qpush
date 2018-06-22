@@ -4,6 +4,7 @@ import (
 	"qpush/client/impl"
 	"qpush/modules/logger"
 	"qpush/server"
+	"time"
 )
 
 func main() {
@@ -17,6 +18,12 @@ func main() {
 		logger.Info(requestID, cmd, string(bytes))
 		return true
 	})
+	go func() {
+		for {
+			time.Sleep(time.Second * 20)
+			conn.SendCmd(server.HeartBeatCmd, nil)
+		}
+	}()
 	err := conn.Subscribe(cb)
 	logger.Error("Subscribe error", err)
 

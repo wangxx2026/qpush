@@ -45,10 +45,18 @@ type MsgConnection struct {
 
 // SendCmd sends a cmd to server
 func (mc *MsgConnection) SendCmd(cmd server.Cmd, cmdParam interface{}) (uint64, error) {
-	jsonBytes, err := json.Marshal(cmdParam)
-	if err != nil {
-		return 0, err
+	var (
+		jsonBytes []byte
+		err       error
+	)
+	// cmdParam is nil for HearBeatCmd
+	if cmdParam != nil {
+		jsonBytes, err = json.Marshal(cmdParam)
+		if err != nil {
+			return 0, err
+		}
 	}
+
 	var requestID uint64
 	packet := simpl.MakePacket(requestID, cmd, jsonBytes)
 

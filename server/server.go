@@ -35,8 +35,12 @@ const (
 	AckCmd
 	// AckRespCmd is resp for ack
 	AckRespCmd
-	// ErrorCmd
+	// ErrorCmd is when resp error
 	ErrorCmd
+	// HeartBeatCmd is for keep alive
+	HeartBeatCmd
+	// HeartBeatRespCmd is resp for heartbeat
+	HeartBeatRespCmd
 )
 
 // CmdParam wraps param for cmd

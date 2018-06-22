@@ -172,8 +172,8 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 			return
 		}
 
-		if size < 16 {
-			logger.Error("invalid packet")
+		if size < 12 {
+			logger.Error("invalid packet", size)
 			return
 		}
 
@@ -196,14 +196,15 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 			return
 		}
 
-		if response == nil {
-			continue
-		}
-
-		jsonResponse, err := json.Marshal(response)
-		if err != nil {
-			logger.Error("json.Marshal fail:%s", err)
-			return
+		var (
+			jsonResponse []byte
+		)
+		if response != nil {
+			jsonResponse, err = json.Marshal(response)
+			if err != nil {
+				logger.Error("json.Marshal fail:%s", err)
+				return
+			}
 		}
 
 		logger.Debug("requestID", requestID, "responseCmd", responseCmd, "jsonResponse", string(jsonResponse))
