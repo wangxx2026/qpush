@@ -1,7 +1,6 @@
 package main
 
 import (
-	"qpush/modules/logger"
 	"qpush/server"
 	"qpush/server/cmd"
 	"qpush/server/impl"
@@ -53,7 +52,7 @@ func main() {
 
 			hbConfig := server.HeartBeatConfig{
 				Callback: func() error {
-					logger.Info("heartbeat called")
+					// logger.Info("heartbeat called")
 					//TODO call interface
 					return nil
 				},
