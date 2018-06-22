@@ -41,11 +41,11 @@ var (
 // Call implements CmdHandler
 func (cmd *AckCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error) {
 
-	if param.Ctx.GUID == nil {
+	if param.Ctx.GUID == "" {
 		logger.Error(errAckNoGUID)
 		return server.ErrorCmd, nil, errAckNoGUID
 	}
-	guid := string(param.Ctx.GUID)
+	guid := param.Ctx.GUID
 
 	ackCmd := client.AckCmd{}
 	err := json.Unmarshal(param.Param, &ackCmd)

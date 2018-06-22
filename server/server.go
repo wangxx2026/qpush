@@ -10,6 +10,9 @@ type Server interface {
 	ListenAndServe(address string, internalAddress string) error
 	Walk(f func(net.Conn, chan []byte) bool)
 	GetCtx(net.Conn) *ConnectionCtx
+	GetStatus() *Status
+	BindGUIDToConn(string, net.Conn)
+	KillConnection(guid string) error
 }
 
 // Config is config for Server
@@ -51,6 +54,14 @@ const (
 	HeartBeatCmd
 	// HeartBeatRespCmd is resp for heartbeat
 	HeartBeatRespCmd
+	// StatusCmd is for query server status
+	StatusCmd
+	// StatusRespCmd is for query server status
+	StatusRespCmd
+	// KillCmd is for kill specific guid
+	KillCmd
+	// KillRespCmd is resp for KillCmd
+	KillRespCmd
 )
 
 // CmdParam wraps param for cmd
@@ -77,7 +88,13 @@ type CmdHandler interface {
 // ConnectionCtx is the context for connection
 type ConnectionCtx struct {
 	Internal bool
-	GUID     []byte
+	GUID     string
+}
+
+// Status contains server status info
+type Status struct {
+	ConnectionCount int
+	Uptime          time.Time
 }
 
 const (

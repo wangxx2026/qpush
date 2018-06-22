@@ -11,3 +11,8 @@ type PushCmd struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }
+
+// KillCmd is struct for kill
+type KillCmd struct {
+	GUID string `json:"guid"`
+}

@@ -7,7 +7,7 @@ import (
 	"qpush/server/impl"
 )
 
-// PushCmd do login
+// PushCmd do push
 type PushCmd struct {
 }
 

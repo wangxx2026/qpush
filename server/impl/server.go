@@ -17,11 +17,14 @@ import (
 // Server is data struct for server
 type Server struct {
 	connWriteChans sync.Map
-	guidConn       sync.Map
-	connCtx        sync.Map
+	guidConn       sync.Map // [string]net.Conn
+	connCtx        sync.Map // [net.Conn]*ConnectionCtx
 	readBufferSize int
 	handler        server.Handler
-	hbConfig       server.HeartBeatConfig
+	upTime         time.Time
+
+	// for heartbeat
+	hbConfig server.HeartBeatConfig
 }
 
 const (
@@ -50,6 +53,7 @@ func NewServer(c *server.Config) *Server {
 	return &Server{
 		readBufferSize: readBufferSize,
 		handler:        handler,
+		upTime:         time.Now(),
 		hbConfig:       c.HBConfig}
 }
 
@@ -91,6 +95,40 @@ func (s *Server) GetCtx(conn net.Conn) *server.ConnectionCtx {
 	}
 
 	return ctx.(*server.ConnectionCtx)
+}
+
+// GetStatus get the server status
+func (s *Server) GetStatus() *server.Status {
+
+	count := 0
+	s.connWriteChans.Range(func(k, v interface{}) bool {
+		count++
+		return true
+	})
+
+	status := &server.Status{Uptime: s.upTime, ConnectionCount: count}
+
+	return status
+}
+
+// BindGUIDToConn as names
+func (s *Server) BindGUIDToConn(guid string, conn net.Conn) {
+	oldConn, ok := s.guidConn.Load(guid)
+	if ok {
+		// TODO handle error
+		s.closeConnection(oldConn.(net.Conn))
+	}
+	s.guidConn.Store(guid, conn)
+}
+
+// KillConnection kills specified connection, usually from another goroutine
+func (s *Server) KillConnection(guid string) error {
+	conn, ok := s.guidConn.Load(guid)
+	if !ok {
+		return fmt.Errorf("no connection for guid:%s", guid)
+	}
+
+	return s.closeConnection(conn.(net.Conn))
 }
 
 // MakePacket generate packet
@@ -261,12 +299,17 @@ func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte) {
 	}
 }
 
-func (s *Server) closeConnection(conn net.Conn) {
+func (s *Server) closeConnection(conn net.Conn) error {
+	err := conn.Close()
+	if err != nil {
+		logger.Error("failed to close connection", err)
+		return err
+	}
 	s.connWriteChans.Delete(conn)
 	ctx, ok := s.connCtx.Load(conn)
-	if ok && ctx.(*server.ConnectionCtx).GUID != nil {
+	if ok && ctx.(*server.ConnectionCtx).GUID != "" {
 		s.guidConn.Delete(ctx.(*server.ConnectionCtx).GUID)
 	}
 	s.connCtx.Delete(conn)
-	conn.Close()
+	return nil
 }

@@ -48,6 +48,8 @@ func main() {
 			serverHandler.RegisterCmd(server.HeartBeatCmd, false, &cmd.HeartBeatCmd{})
 
 			serverHandler.RegisterCmd(server.PushCmd, true, &internalcmd.PushCmd{})
+			serverHandler.RegisterCmd(server.StatusCmd, true, &internalcmd.StatusCmd{})
+			serverHandler.RegisterCmd(server.KillCmd, true, &internalcmd.KillCmd{})
 
 			hbConfig := server.HeartBeatConfig{
 				Callback: func() error {
