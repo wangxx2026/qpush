@@ -14,7 +14,8 @@ type Client interface {
 
 // MsgConnection is a connection to server
 type MsgConnection interface {
-	SendCmd(cmd string, cmdParam interface{}) (uint64, error)
+	SendCmd(cmd server.Cmd, cmdParam interface{}) (uint64, error)
+	SendCmdBlocking(cmd server.Cmd, cmdParam interface{}) ([]byte, error)
 	Subscribe(cb OnResponse) error
 }
 

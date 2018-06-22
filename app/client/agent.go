@@ -34,27 +34,12 @@ func main() {
 			}
 
 			pushCmd := &client.PushCmd{MsgID: msgID, Title: title, Content: content}
-			ID, err := conn.SendCmd(server.PushCmd, pushCmd)
+			bytes, err := conn.SendCmdBlocking(server.PushCmd, pushCmd)
 			if err != nil {
-				logger.Error("SendCmd failed:", err)
+				logger.Error("SendCmdBlocking failed:", err)
 			}
 
-			cb := impl.NewCallBack(func(requestID uint64, cmd server.Cmd, bytes []byte) bool {
-
-				if ID == requestID {
-					logger.Info("got reply")
-					logger.Info(requestID, cmd, string(bytes))
-					return false
-				}
-
-				return true
-			})
-
-			err = conn.Subscribe(cb)
-
-			if err != nil {
-				logger.Error("Subscribe error", err)
-			}
+			logger.Info("result", string(bytes))
 		}}
 
 	var statusCmd = &cobra.Command{
@@ -70,28 +55,12 @@ func main() {
 				return
 			}
 
-			ID, err := conn.SendCmd(server.StatusCmd, nil)
+			bytes, err := conn.SendCmdBlocking(server.StatusCmd, nil)
 			if err != nil {
-				logger.Error("failed to send status cmd", err)
-				return
+				logger.Error("SendCmdBlocking failed:", err)
 			}
 
-			cb := impl.NewCallBack(func(requestID uint64, cmd server.Cmd, bytes []byte) bool {
-
-				if ID == requestID {
-					logger.Info("got reply")
-					logger.Info(requestID, cmd, string(bytes))
-					return false
-				}
-
-				return true
-			})
-
-			err = conn.Subscribe(cb)
-
-			if err != nil {
-				logger.Error("Subscribe error", err)
-			}
+			logger.Info("result", string(bytes))
 		}}
 	var killCmd = &cobra.Command{
 		Use:   "kill [internal address] [guid]",
@@ -108,28 +77,12 @@ func main() {
 			}
 
 			cmdInfo := client.KillCmd{GUID: guid}
-			ID, err := conn.SendCmd(server.KillCmd, &cmdInfo)
+			bytes, err := conn.SendCmdBlocking(server.KillCmd, &cmdInfo)
 			if err != nil {
-				logger.Error("failed to send kill cmd", err)
-				return
+				logger.Error("SendCmdBlocking failed:", err)
 			}
 
-			cb := impl.NewCallBack(func(requestID uint64, cmd server.Cmd, bytes []byte) bool {
-
-				if ID == requestID {
-					logger.Info("got reply")
-					logger.Info(requestID, cmd, string(bytes))
-					return false
-				}
-
-				return true
-			})
-
-			err = conn.Subscribe(cb)
-
-			if err != nil {
-				logger.Error("Subscribe error", err)
-			}
+			logger.Info("result", string(bytes))
 		}}
 	var rootCmd = &cobra.Command{
 		Use: "qpushagent",

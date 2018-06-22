@@ -66,6 +66,38 @@ func (mc *MsgConnection) SendCmd(cmd server.Cmd, cmdParam interface{}) (uint64, 
 	return requestID, err
 }
 
+// SendCmdBlocking works in blocking mode
+func (mc *MsgConnection) SendCmdBlocking(cmd server.Cmd, cmdParam interface{}) ([]byte, error) {
+	ID, err := mc.SendCmd(cmd, cmdParam)
+	if err != nil {
+		logger.Error("failed to send cmd", cmd, cmdParam, err)
+		return nil, err
+	}
+
+	var byteResp []byte
+	cb := NewCallBack(func(requestID uint64, cmd server.Cmd, bytes []byte) bool {
+
+		if ID == requestID {
+			logger.Debug("got reply")
+			logger.Debug(requestID, cmd, string(bytes))
+			byteResp = make([]byte, len(bytes))
+			copy(byteResp, bytes)
+			return false
+		}
+		return true
+	})
+
+	err = mc.Subscribe(cb)
+
+	if err != nil {
+		logger.Error("Subscribe error", err)
+		return nil, err
+	}
+
+	return byteResp, nil
+
+}
+
 // Subscribe messages from the underlying connection
 func (mc *MsgConnection) Subscribe(cb *OnResponse) error {
 	r := simpl.NewStreamReader(mc.conn)
