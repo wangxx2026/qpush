@@ -36,6 +36,7 @@ func main() {
 			err := conn.Subscribe(cb)
 			logger.Error("Subscribe error", err)
 		}}
+
 	rootCmd.Execute()
 
 }
