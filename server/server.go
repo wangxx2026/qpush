@@ -1,6 +1,9 @@
 package server
 
-import "net"
+import (
+	"net"
+	"time"
+)
 
 // Server is interface for server
 type Server interface {
@@ -13,6 +16,13 @@ type Server interface {
 type Config struct {
 	ReadBufferSize int
 	Handler        Handler
+	HBConfig       HeartBeatConfig
+}
+
+// HeartBeatConfig if config for heartbeat
+type HeartBeatConfig struct {
+	Callback func() error
+	Interval time.Duration
 }
 
 // Cmd is uint32

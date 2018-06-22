@@ -16,7 +16,7 @@ func main() {
 	}
 
 	logger.Debug("d1")
-	pushCmd := &client.PushCmd{MsgID: 1, Message: "hello world"}
+	pushCmd := &client.PushCmd{MsgID: 1, Title: "hello title", Content: "hello content"}
 	ID, err := conn.SendCmd(server.PushCmd, pushCmd)
 	if err != nil {
 		logger.Error("SendCmd failed:", err)

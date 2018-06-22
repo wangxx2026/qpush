@@ -13,5 +13,6 @@ const (
 // PushCmd is struct for push
 type PushCmd struct {
 	MsgID   int    `json:"msg_id"`
-	Message string `json:"message"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
 }

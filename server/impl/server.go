@@ -21,6 +21,7 @@ type Server struct {
 	connCtx        sync.Map
 	readBufferSize int
 	handler        server.Handler
+	hbConfig       server.HeartBeatConfig
 }
 
 const (
@@ -48,7 +49,8 @@ func NewServer(c *server.Config) *Server {
 
 	return &Server{
 		readBufferSize: readBufferSize,
-		handler:        handler}
+		handler:        handler,
+		hbConfig:       c.HBConfig}
 }
 
 // ListenAndServe start listen and serve
@@ -64,6 +66,9 @@ func (s *Server) ListenAndServe(address string, internalAddress string) error {
 	go s.listenAndServe(address, false, done, &wg)
 	wg.Add(1)
 	go s.listenAndServe(internalAddress, true, done, &wg)
+
+	wg.Add(1)
+	go s.heartBeat(done, &wg)
 
 	go s.handleSignal(quitChan, done)
 	wg.Wait()
@@ -103,6 +108,27 @@ func (s *Server) handleSignal(quitChan chan os.Signal, done chan bool) {
 	<-quitChan
 	logger.Info("signal captured")
 	close(done)
+}
+
+func (s *Server) heartBeat(done chan bool, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	ticker := time.NewTicker(s.hbConfig.Interval)
+	for {
+		select {
+		case <-done:
+			return
+		case <-ticker.C:
+			for {
+				err := s.hbConfig.Callback()
+				if err == nil {
+					break
+				}
+				time.Sleep(time.Second)
+			}
+		}
+	}
+
 }
 
 func (s *Server) listenAndServe(address string, internal bool, done chan bool, wg *sync.WaitGroup) {
