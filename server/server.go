@@ -68,9 +68,15 @@ const (
 type CmdParam struct {
 	Param     []byte
 	Conn      net.Conn
+	Reader    StreamReader
 	Ctx       *ConnectionCtx
 	Server    Server
 	RequestID uint64
+}
+
+// StreamReader is interface to stream reader
+type StreamReader interface {
+	SetReadTimeout(timeout int)
 }
 
 // Handler is handle for Server

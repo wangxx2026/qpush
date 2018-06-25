@@ -28,6 +28,11 @@ func NewStreamReaderWithTimeout(conn net.Conn, timeout int) *StreamReader {
 	return &StreamReader{conn: conn, timeout: timeout}
 }
 
+// SetReadTimeout allows specify timeout for read
+func (r *StreamReader) SetReadTimeout(timeout int) {
+	r.timeout = timeout
+}
+
 // ReadUint32 read uint32 from socket
 func (r *StreamReader) ReadUint32() (uint32, error) {
 	bytes := make([]byte, 4)

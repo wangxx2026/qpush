@@ -31,7 +31,8 @@ const (
 	// DefaultAcceptTimeout is the default accept timeout duration
 	DefaultAcceptTimeout = 5 * time.Second
 	// DefaultReadTimeout is the default read timeout duration in seconds
-	DefaultReadTimeout         = 10
+	DefaultReadTimeout = 10
+	// DefaultInternalReadTimeout is read timeout for internal connections
 	DefaultInternalReadTimeout = 10 * 60
 	// DefaultWriteTimeout is default timeout for write
 	DefaultWriteTimeout = time.Second * 10
@@ -258,7 +259,13 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 		requestID := binary.BigEndian.Uint64(payload)
 		cmd := server.Cmd(binary.BigEndian.Uint32(payload[8:]))
 
-		params := server.CmdParam{Param: payload[12:], Server: s, Conn: conn, RequestID: requestID, Ctx: ctx}
+		params := server.CmdParam{
+			Param:     payload[12:],
+			Server:    s,
+			Conn:      conn,
+			RequestID: requestID,
+			Ctx:       ctx,
+			Reader:    r}
 
 		logger.Debug("cmdParam is", string(payload[12:]))
 		responseCmd, response, err := s.handler.Call(cmd, internal, &params)
