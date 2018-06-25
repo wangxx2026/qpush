@@ -11,4 +11,4 @@ RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
 
 WORKDIR /go/src/qpush
 
-ENTRYPOINT go run ${EXEC_FILE} localhost:8888 localhost:8890
+ENTRYPOINT go run ${EXEC_FILE} localhost:8888 localhost:8890 --env test
