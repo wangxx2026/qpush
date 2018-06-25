@@ -31,7 +31,8 @@ const (
 	// DefaultAcceptTimeout is the default accept timeout duration
 	DefaultAcceptTimeout = 5 * time.Second
 	// DefaultReadTimeout is the default read timeout duration in seconds
-	DefaultReadTimeout = 60 // TODO for prod maybe 10*60
+	DefaultReadTimeout         = 10
+	DefaultInternalReadTimeout = 10 * 60
 	// DefaultWriteTimeout is default timeout for write
 	DefaultWriteTimeout = time.Second * 10
 )
@@ -218,7 +219,13 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 	writeChan := make(chan []byte, 30)
 	s.connWriteChans.Store(conn, writeChan)
 
-	r := NewStreamReaderWithTimeout(conn, DefaultReadTimeout)
+	var readTimeout int
+	if internal {
+		readTimeout = DefaultInternalReadTimeout
+	} else {
+		readTimeout = DefaultReadTimeout
+	}
+	r := NewStreamReaderWithTimeout(conn, readTimeout)
 
 	go s.handleWrite(conn, writeChan)
 
