@@ -1,0 +1,40 @@
+apiVersion: apps/v1 #  for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
+kind: Deployment
+metadata:
+  name: push-go-deployment
+  labels:
+    app: push-go
+spec:
+  selector:
+    matchLabels:
+      app: push-go
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: push-go
+    spec:
+      containers:
+      - name: push-go
+        image: h1.ywopt.com/ywopt.com/push-go:latest
+        env:
+        - name: CONF
+          value: "conf_test.toml"
+        - name: JAEGER_AGENT_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: JAEGER_AGENT_PORT
+          valueFrom:
+            secretKeyRef:
+              name: micro-audit-secret
+              key: JAEGER_AGENT_PORT
+        ports:
+        - containerPort: 8080
+          name: debug-node
+        - containerPort: 8081
+          name: http-node
+        - containerPort: 8082
+          name: grpc-node
+      imagePullSecrets:
+      - name: harbor-secret
