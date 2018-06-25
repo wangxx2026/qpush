@@ -26,7 +26,7 @@ func (cmd *KillCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 		return server.ErrorCmd, nil, errUnmarshalFail
 	}
 
-	err = param.Server.KillConnection(cmdInfo.GUID)
+	err = param.Server.KillGUID(cmdInfo.GUID)
 
 	return server.KillRespCmd, true, err
 

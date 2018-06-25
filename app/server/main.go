@@ -55,6 +55,7 @@ func main() {
 			serverHandler.RegisterCmd(server.PushCmd, true, &internalcmd.PushCmd{})
 			serverHandler.RegisterCmd(server.StatusCmd, true, &internalcmd.StatusCmd{})
 			serverHandler.RegisterCmd(server.KillCmd, true, &internalcmd.KillCmd{})
+			serverHandler.RegisterCmd(server.KillAllCmd, true, &internalcmd.KillAllCmd{})
 
 			hbConfig := server.HeartBeatConfig{
 				Callback: func() error {

@@ -13,7 +13,8 @@ type Server interface {
 	GetCtx(net.Conn) *ConnectionCtx
 	GetStatus() *Status
 	BindGUIDToConn(string, net.Conn)
-	KillConnection(guid string) error
+	KillGUID(guid string) error
+	CloseConnection(conn net.Conn) error
 }
 
 // Config is config for Server
@@ -63,6 +64,10 @@ const (
 	KillCmd
 	// KillRespCmd is resp for KillCmd
 	KillRespCmd
+	// KillAllCmd is for kill all cons
+	KillAllCmd
+	// KillAllRespCmd is resp for KillAllCmd
+	KillAllRespCmd
 )
 
 // CmdParam wraps param for cmd

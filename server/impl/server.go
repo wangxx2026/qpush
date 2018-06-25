@@ -120,19 +120,19 @@ func (s *Server) BindGUIDToConn(guid string, conn net.Conn) {
 	oldConn, ok := s.guidConn.Load(guid)
 	if ok {
 		// TODO handle error
-		s.closeConnection(oldConn.(net.Conn))
+		s.CloseConnection(oldConn.(net.Conn))
 	}
 	s.guidConn.Store(guid, conn)
 }
 
-// KillConnection kills specified connection, usually from another goroutine
-func (s *Server) KillConnection(guid string) error {
+// KillGUID kills specified connection, usually from another goroutine
+func (s *Server) KillGUID(guid string) error {
 	conn, ok := s.guidConn.Load(guid)
 	if !ok {
 		return fmt.Errorf("no connection for guid:%s", guid)
 	}
 
-	return s.closeConnection(conn.(net.Conn))
+	return s.CloseConnection(conn.(net.Conn))
 }
 
 // MakePacket generate packet
@@ -218,7 +218,7 @@ func (s *Server) listenAndServe(address string, internal bool, done chan bool, w
 
 func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, wg *sync.WaitGroup) {
 
-	defer s.closeConnection(conn)
+	defer s.CloseConnection(conn)
 	defer wg.Done()
 
 	ctx := &server.ConnectionCtx{Internal: internal}
@@ -314,13 +314,13 @@ func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte) {
 		logger.Debug("WriteBytes called", bytes)
 		err := w.WriteBytes(bytes)
 		if err != nil {
-			s.closeConnection(conn)
+			s.CloseConnection(conn)
 			return
 		}
 	}
 }
 
-func (s *Server) closeConnection(conn net.Conn) error {
+func (s *Server) CloseConnection(conn net.Conn) error {
 	err := conn.Close()
 	if err != nil {
 		logger.Error("failed to close connection", err)
