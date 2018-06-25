@@ -74,7 +74,7 @@ func main() {
 		}}
 
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&env, "config", "", "config file")
+	rootCmd.PersistentFlags().StringVar(&env, "env", "", "environment")
 	rootCmd.Execute()
 
 }
