@@ -117,18 +117,16 @@ func (mc *MsgConnection) Subscribe(cb *OnResponse) error {
 			return err
 		}
 
-		logger.Debug("test1")
 		payload := make([]byte, size)
 		err = r.ReadBytes(payload)
 		if err != nil {
 			return err
 		}
-		logger.Debug("test2")
 
 		requestID := binary.BigEndian.Uint64(payload)
 		cmd := server.Cmd(binary.BigEndian.Uint32(payload[8:]))
 
-		ok := cb.Call(requestID, cmd, payload[8:])
+		ok := cb.Call(requestID, cmd, payload[12:])
 		if !ok {
 			return nil
 		}

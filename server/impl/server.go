@@ -201,6 +201,11 @@ func (s *Server) listenAndServe(address string, internal bool, done chan bool, w
 				continue
 			}
 			logger.Error(fmt.Sprintf("accept failed:%s", err))
+
+			// DEBUG only
+			status := s.GetStatus()
+			logger.Error("connection count is", status.ConnectionCount)
+
 			continue
 		}
 
