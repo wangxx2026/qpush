@@ -3,6 +3,7 @@ package logger
 import (
 	"fmt"
 	"os"
+	"qpush/modules/config"
 )
 
 // Info prints to stdout
@@ -17,5 +18,12 @@ func Error(msg ...interface{}) {
 
 // Debug prints to stderr
 func Debug(msg ...interface{}) {
+
+	conf := config.Get()
+
+	if conf.Env == config.ProductionEnv {
+		return
+	}
+
 	fmt.Fprintln(os.Stderr, msg...)
 }

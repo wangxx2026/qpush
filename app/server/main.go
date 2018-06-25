@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"qpush/modules/config"
 	"qpush/server"
 	"qpush/server/cmd"
 	"qpush/server/impl"
@@ -17,6 +19,10 @@ const (
 	DefaultPublicAddress = "localhost:8888"
 	// DefaultInternalAddress is for internal
 	DefaultInternalAddress = "localhost:8890"
+)
+
+var (
+	env string
 )
 
 func main() {
@@ -67,6 +73,15 @@ func main() {
 			s.ListenAndServe(publicAddress, internalAddress)
 		}}
 
+	cobra.OnInitialize(initConfig)
+	rootCmd.PersistentFlags().StringVar(&env, "config", "", "config file")
 	rootCmd.Execute()
 
+}
+
+func initConfig() {
+	_, err := config.Load(env)
+	if err != nil {
+		panic(fmt.Sprintf("failed to load config file: %s", env))
+	}
 }
