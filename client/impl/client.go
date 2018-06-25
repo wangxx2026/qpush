@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"crypto/rand"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -57,13 +58,20 @@ func (mc *MsgConnection) SendCmd(cmd server.Cmd, cmdParam interface{}) (uint64, 
 		}
 	}
 
-	var requestID uint64
+	requestID := PoorManUUID()
 	packet := simpl.MakePacket(requestID, cmd, jsonBytes)
 
 	w := simpl.NewStreamWriter(mc.conn)
 	err = w.WriteBytes(packet)
 
 	return requestID, err
+}
+
+// PoorManUUID generate a uint64 uuid
+func PoorManUUID() uint64 {
+	buf := make([]byte, 8)
+	rand.Read(buf)
+	return binary.LittleEndian.Uint64(buf)
 }
 
 // SendCmdBlocking works in blocking mode
