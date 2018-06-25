@@ -10,8 +10,8 @@ var (
 )
 
 const (
-	// ProductionEnv is the production string for prod
-	ProductionEnv = "prod"
+	// ProdEnv is the production string for prod
+	ProdEnv = "prod"
 )
 
 // Load init conf for environment

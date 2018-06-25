@@ -21,7 +21,7 @@ func Debug(msg ...interface{}) {
 
 	conf := config.Get()
 
-	if conf.Env == config.ProductionEnv {
+	if conf.Env == config.ProdEnv {
 		return
 	}
 
