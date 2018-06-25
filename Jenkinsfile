@@ -6,7 +6,7 @@ node {
     imageName = "${env.BRANCH_NAME}-${env.BUILD_ID}"
     stage('Build Docker') {
         docker.withRegistry('http://h1.ywopt.com', '1efee65b-bc30-4bfa-9c40-222dd648e4a5') {
-            def customImage = docker.build("h1.ywopt.com/ywopt.com/qpush:${imageName}", "-f ./Dockerfile/Dockerfile ./")
+            def customImage = docker.build("h1.ywopt.com/ywopt.com/qpush:${imageName}", "-f ./deploy/dockerfile/Dockerfile ./")
             customImage.push()
         }
 
