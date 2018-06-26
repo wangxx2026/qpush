@@ -255,11 +255,8 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 		size, err := r.ReadUint32()
 		if err != nil {
 
-			// 健康检查导致太多eof，所以不输出eof
-			if operr, ok := err.(*net.OpError); ok && operr.Err.Error() == syscall.ECONNRESET.Error() {
-			} else {
-				logger.Error(fmt.Sprintf("ReadUint32 failed:%s", err))
-			}
+			// 健康检查导致太多关闭，所以不输出日志
+			//logger.Error(fmt.Sprintf("ReadUint32 failed:%s", err))
 
 			return
 		}
@@ -273,11 +270,8 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 		err = r.ReadBytes(payload)
 		if err != nil {
 
-			// 健康检查导致太多eof，所以不输出eof
-			if operr, ok := err.(*net.OpError); ok && operr.Err.Error() == syscall.ECONNRESET.Error() {
-			} else {
-				logger.Error(fmt.Sprintf("ReadBytes failed:%s", err))
-			}
+			// 健康检查导致太多关闭，所以不输出日志
+			//logger.Error(fmt.Sprintf("ReadBytes failed:%s", err))
 
 			return
 		}
