@@ -77,6 +77,9 @@ func (s *Server) ListenAndServe(address string, internalAddress string) error {
 	wg.Add(1)
 	go s.heartBeat(done, &wg)
 
+	wg.Add(1)
+	go s.handleHTTP(done, &wg)
+
 	go s.handleSignal(quitChan, done)
 	wg.Wait()
 
