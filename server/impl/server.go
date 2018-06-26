@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net"
 	"os"
 	"os/signal"
@@ -257,7 +256,8 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 		if err != nil {
 
 			// 健康检查导致太多eof，所以不输出eof
-			if err != io.EOF {
+			if operr, ok := err.(*net.OpError); ok && operr.Err.Error() == syscall.ECONNRESET.Error() {
+			} else {
 				logger.Error(fmt.Sprintf("ReadUint32 failed:%s", err))
 			}
 
@@ -274,7 +274,8 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 		if err != nil {
 
 			// 健康检查导致太多eof，所以不输出eof
-			if err != io.EOF {
+			if operr, ok := err.(*net.OpError); ok && operr.Err.Error() == syscall.ECONNRESET.Error() {
+			} else {
 				logger.Error(fmt.Sprintf("ReadBytes failed:%s", err))
 			}
 
