@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	NumberConn      = 240
+	NumberConn      = 2400
 	NumberMesg      = 1000
 	PublicAddress   = "106.14.50.182:8888"
 	InternalAddress = "106.14.50.182:8890"
@@ -78,7 +78,7 @@ func TestMassiveConnections(t *testing.T) {
 		n++
 	}
 
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 100)
 
 	// send 1000 messages
 	agent := cimpl.NewAgent()
