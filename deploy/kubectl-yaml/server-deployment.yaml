@@ -32,6 +32,8 @@ spec:
         ports:
         - containerPort: 8888
           name: external
+        - containerPort: 8080
+          name: externalHttp  
         - containerPort: 8890
           name: internal
       imagePullSecrets:
