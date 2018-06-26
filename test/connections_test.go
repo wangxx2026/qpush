@@ -32,14 +32,14 @@ func TestMassiveConnections(t *testing.T) {
 		go func(n int) {
 			defer wgDone.Done()
 
-			fmt.Println("before dial")
+			// fmt.Println("before dial")
 			conn := c.Dial(PublicAddress, strconv.Itoa(n))
 			if conn == nil {
 				t.Fatalf("failed to dial")
 				return
 			}
 
-			fmt.Println("dial ok")
+			// fmt.Println("dial ok")
 
 			nextIdx := 1
 			cb := cimpl.NewCallBack(func(requestID uint64, cmd server.Cmd, bytes []byte) bool {
