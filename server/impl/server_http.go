@@ -26,7 +26,7 @@ func (s *Server) handleHTTP(done chan bool, wg *sync.WaitGroup) {
 }
 
 func (s *Server) startHTTPServer() *http.Server {
-	srv := &http.Server{Addr: ":8080"}
+	srv := &http.Server{Addr: "0.0.0.0:8080"}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 		id := 1
