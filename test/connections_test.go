@@ -15,8 +15,8 @@ import (
 const (
 	NumberConn      = 2400
 	NumberMesg      = 1000
-	PublicAddress   = "106.14.50.182:8888"
-	InternalAddress = "106.14.50.182:8890"
+	PublicAddress   = "localhost:8888"
+	InternalAddress = "localhost:8890"
 )
 
 func TestMassiveConnections(t *testing.T) {
