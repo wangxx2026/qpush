@@ -24,12 +24,10 @@ func TestMassiveConnections(t *testing.T) {
 
 	c := cimpl.NewClient()
 	// make 10000 connections
-	wgConn := sync.WaitGroup{}
 	wgDone := sync.WaitGroup{}
 	n := 0
 	for n < NumberConn {
 
-		wgConn.Add(1)
 		wgDone.Add(1)
 		go func(n int) {
 			defer wgDone.Done()
@@ -41,13 +39,8 @@ func TestMassiveConnections(t *testing.T) {
 			}
 
 			nextIdx := 1
-			firstTime := true
 			cb := cimpl.NewCallBack(func(requestID uint64, cmd server.Cmd, bytes []byte) bool {
 				fmt.Println("cmd is", cmd)
-				if firstTime {
-					wgConn.Done()
-					firstTime = false
-				}
 
 				if cmd == server.ForwardCmd {
 					message := &client.PushCmd{}
@@ -84,7 +77,8 @@ func TestMassiveConnections(t *testing.T) {
 
 		n++
 	}
-	wgConn.Wait()
+
+	time.Sleep(time.Second * 10)
 
 	// send 1000 messages
 	agent := cimpl.NewAgent()
@@ -98,7 +92,7 @@ func TestMassiveConnections(t *testing.T) {
 	for idx <= NumberMesg {
 		pushCmd := &client.PushCmd{MsgID: idx, Title: fmt.Sprintf("title %d", idx), Content: fmt.Sprintf("body %d", idx)}
 
-		t.Log("pushing message\n")
+		fmt.Println("pushing message", idx)
 		bytes, err := conn.SendCmdBlocking(server.PushCmd, pushCmd)
 		if err != nil {
 			t.Fatalf("SendCmdBlocking failed: %v", err)
