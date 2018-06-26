@@ -32,7 +32,7 @@ const (
 	// DefaultAcceptTimeout is the default accept timeout duration
 	DefaultAcceptTimeout = 5 * time.Second
 	// DefaultReadTimeout is the default read timeout duration in seconds
-	DefaultReadTimeout = 10
+	DefaultReadTimeout = 10 * 60 //TODO change back
 	// DefaultInternalReadTimeout is read timeout for internal connections
 	DefaultInternalReadTimeout = 10 * 60
 	// DefaultWriteTimeout is default timeout for write
