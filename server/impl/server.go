@@ -155,7 +155,7 @@ func MakePacket(requestID uint64, cmd server.Cmd, payload []byte) []byte {
 
 func (s *Server) handleSignal(quitChan chan os.Signal, done chan bool) {
 	<-quitChan
-	logger.Info("signal captured")
+	logger.Debug("signal captured")
 	close(done)
 }
 
@@ -319,12 +319,12 @@ func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte) {
 	for {
 		bytes := <-writeChann
 
-		logger.Debug("writeChann fired")
+		// logger.Debug("writeChann fired")
 		if bytes == nil {
 			return
 		}
 
-		logger.Debug("WriteBytes called", bytes)
+		// logger.Debug("WriteBytes called", bytes)
 		err := w.WriteBytes(bytes)
 		if err != nil {
 			s.CloseConnection(conn)

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	NumberConn      = 140
+	NumberConn      = 240
 	NumberMesg      = 1000
 	PublicAddress   = "106.14.50.182:8888"
 	InternalAddress = "106.14.50.182:8890"

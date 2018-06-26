@@ -66,7 +66,7 @@ func (cmd *AckCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error)
 		cmd.batchSignal <- true
 	}
 
-	logger.Info("AckCmd called")
+	logger.Debug("AckCmd called")
 	return server.AckRespCmd, true, nil
 }
 

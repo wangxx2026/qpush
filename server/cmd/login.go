@@ -23,7 +23,7 @@ type LoginCmd struct {
 
 // Call implements CmdHandler
 func (cmd *LoginCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error) {
-	logger.Info("LoginCmd called")
+	logger.Debug("LoginCmd called")
 
 	loginCmd := client.LoginCmd{}
 	err := json.Unmarshal(param.Param, &loginCmd)
