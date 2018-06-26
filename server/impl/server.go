@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/signal"
@@ -254,7 +255,12 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 
 		size, err := r.ReadUint32()
 		if err != nil {
-			logger.Error(fmt.Sprintf("ReadUint32 failed:%s", err))
+
+			// 健康检查导致太多eof，所以不输出eof
+			if err != io.EOF {
+				logger.Error(fmt.Sprintf("ReadUint32 failed:%s", err))
+			}
+
 			return
 		}
 
@@ -266,7 +272,12 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 		payload := make([]byte, size)
 		err = r.ReadBytes(payload)
 		if err != nil {
-			logger.Error(fmt.Sprintf("ReadBytes failed:%s", err))
+
+			// 健康检查导致太多eof，所以不输出eof
+			if err != io.EOF {
+				logger.Error(fmt.Sprintf("ReadBytes failed:%s", err))
+			}
+
 			return
 		}
 
