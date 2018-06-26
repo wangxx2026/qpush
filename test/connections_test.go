@@ -32,6 +32,7 @@ func TestMassiveConnections(t *testing.T) {
 		go func(n int) {
 			defer wgDone.Done()
 
+			fmt.Println("before dial")
 			conn := c.Dial(PublicAddress, strconv.Itoa(n))
 			if conn == nil {
 				t.Fatalf("failed to dial")
