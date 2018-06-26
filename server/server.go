@@ -107,6 +107,7 @@ type ConnectionCtx struct {
 type Status struct {
 	MemStats        runtime.MemStats
 	ConnectionCount int
+	GUIDCount       int
 	Uptime          time.Time
 }
 

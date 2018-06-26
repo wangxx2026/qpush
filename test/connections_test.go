@@ -13,8 +13,10 @@ import (
 )
 
 const (
-	NumberConn = 240
-	NumberMesg = 1000
+	NumberConn      = 140
+	NumberMesg      = 1000
+	PublicAddress   = "106.14.50.182:8888"
+	InternalAddress = "106.14.50.182:8890"
 )
 
 func TestMassiveConnections(t *testing.T) {
@@ -32,7 +34,7 @@ func TestMassiveConnections(t *testing.T) {
 		go func(n int) {
 			defer wgDone.Done()
 
-			conn := c.Dial("localhost:8888", strconv.Itoa(n))
+			conn := c.Dial(PublicAddress, strconv.Itoa(n))
 			if conn == nil {
 				t.Fatalf("failed to dial")
 				return
@@ -86,7 +88,7 @@ func TestMassiveConnections(t *testing.T) {
 
 	// send 1000 messages
 	agent := cimpl.NewAgent()
-	conn := agent.Dial("localhost:8890")
+	conn := agent.Dial(InternalAddress)
 	if conn == nil {
 		t.Fatalf("failed to dial")
 		return
@@ -95,6 +97,8 @@ func TestMassiveConnections(t *testing.T) {
 	idx := 1
 	for idx <= NumberMesg {
 		pushCmd := &client.PushCmd{MsgID: idx, Title: fmt.Sprintf("title %d", idx), Content: fmt.Sprintf("body %d", idx)}
+
+		t.Log("pushing message\n")
 		bytes, err := conn.SendCmdBlocking(server.PushCmd, pushCmd)
 		if err != nil {
 			t.Fatalf("SendCmdBlocking failed: %v", err)

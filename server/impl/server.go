@@ -103,13 +103,20 @@ func (s *Server) GetCtx(conn net.Conn) *server.ConnectionCtx {
 // GetStatus get the server status
 func (s *Server) GetStatus() *server.Status {
 
+	guidCount := 0
 	count := 0
 	s.connWriteChans.Range(func(k, v interface{}) bool {
+
 		count++
+
+		ctx := s.GetCtx(k.(net.Conn))
+		if ctx.GUID != "" {
+			guidCount++
+		}
 		return true
 	})
 
-	status := &server.Status{Uptime: s.upTime, ConnectionCount: count}
+	status := &server.Status{Uptime: s.upTime, ConnectionCount: count, GUIDCount: guidCount}
 	runtime.ReadMemStats(&status.MemStats)
 
 	return status
