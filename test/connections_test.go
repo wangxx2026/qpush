@@ -38,6 +38,8 @@ func TestMassiveConnections(t *testing.T) {
 				return
 			}
 
+			fmt.Println("dial ok")
+
 			nextIdx := 1
 			cb := cimpl.NewCallBack(func(requestID uint64, cmd server.Cmd, bytes []byte) bool {
 				fmt.Println("cmd is", cmd)
