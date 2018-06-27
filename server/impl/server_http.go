@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"qpush/client"
+	"qpush/modules/config"
 	"qpush/modules/logger"
 	"qpush/server"
 	"sync"
@@ -28,6 +29,10 @@ func (s *Server) handleHTTP(done chan bool, wg *sync.WaitGroup) {
 func (s *Server) startHTTPServer() *http.Server {
 	srv := &http.Server{Addr: "0.0.0.0:8080"}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+
+		if config.Get().Env == config.ProdEnv {
+			return
+		}
 
 		id := 1
 		title := "test title"
