@@ -46,6 +46,11 @@ func TestMassiveConnections(t *testing.T) {
 				fmt.Println("cmd is", cmd)
 
 				if cmd == server.ForwardCmd {
+					// ignore debug data
+					if requestID == 0 {
+						return true
+					}
+
 					message := &client.PushCmd{}
 					err := json.Unmarshal(bytes, message)
 					if err != nil {
