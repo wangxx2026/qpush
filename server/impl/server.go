@@ -269,7 +269,6 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 	for {
 		select {
 		case <-done:
-			close(writeChan)
 			return
 		default:
 		}
@@ -361,6 +360,10 @@ func (s *Server) CloseConnection(conn net.Conn) error {
 	if err != nil {
 		logger.Error("failed to close connection", err)
 		return err
+	}
+	writeChann, ok := s.connWriteChans.Load(conn)
+	if ok {
+		close(writeChann.(chan []byte))
 	}
 	s.connWriteChans.Delete(conn)
 	ctx, ok := s.connCtx.Load(conn)
