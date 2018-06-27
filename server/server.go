@@ -108,6 +108,8 @@ type Status struct {
 	MemStats        runtime.MemStats
 	ConnectionCount int
 	GUIDCount       int
+	GUIDConnMapSize int
+	ConnCtxMapSize  int
 	Uptime          time.Time
 }
 

@@ -119,7 +119,25 @@ func (s *Server) GetStatus() *server.Status {
 		return true
 	})
 
-	status := &server.Status{Uptime: s.upTime, ConnectionCount: count, GUIDCount: guidCount}
+	var (
+		GUIDConnMapSize int
+		ConnCtxMapSize  int
+	)
+
+	s.guidConn.Range(func(k, v interface{}) bool {
+		GUIDConnMapSize++
+		return true
+	})
+	s.connCtx.Range(func(k, v interface{}) bool {
+		ConnCtxMapSize++
+		return true
+	})
+
+	status := &server.Status{
+		Uptime: s.upTime, ConnectionCount: count, GUIDCount: guidCount,
+		GUIDConnMapSize: GUIDConnMapSize,
+		ConnCtxMapSize:  ConnCtxMapSize}
+
 	runtime.ReadMemStats(&status.MemStats)
 
 	return status
