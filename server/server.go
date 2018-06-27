@@ -2,7 +2,6 @@ package server
 
 import (
 	"net"
-	"runtime"
 	"time"
 )
 
@@ -105,7 +104,6 @@ type ConnectionCtx struct {
 
 // Status contains server status info
 type Status struct {
-	MemStats        runtime.MemStats
 	ConnectionCount int
 	GUIDCount       int
 	GUIDConnMapSize int

@@ -9,7 +9,6 @@ import (
 	"os/signal"
 	"qpush/modules/logger"
 	"qpush/server"
-	"runtime"
 	"sync"
 	"syscall"
 	"time"
@@ -138,8 +137,6 @@ func (s *Server) GetStatus() *server.Status {
 		Uptime: s.upTime, ConnectionCount: count, GUIDCount: guidCount,
 		GUIDConnMapSize: GUIDConnMapSize,
 		ConnCtxMapSize:  ConnCtxMapSize}
-
-	runtime.ReadMemStats(&status.MemStats)
 
 	return status
 }
