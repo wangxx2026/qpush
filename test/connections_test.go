@@ -46,6 +46,9 @@ func TestMassiveConnections(t *testing.T) {
 				fmt.Println("cmd is", cmd)
 
 				if cmd == server.ForwardCmd {
+
+					t.Fatal("by purpose")
+
 					// ignore debug data
 					if requestID == 0 {
 						return true
