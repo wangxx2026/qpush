@@ -244,6 +244,11 @@ func (s *Server) listenAndServe(address string, internal bool, done chan bool, w
 
 func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, wg *sync.WaitGroup) {
 
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("recovered from panic in handleConnection", err)
+		}
+	}()
 	defer s.CloseConnection(conn)
 	defer wg.Done()
 
