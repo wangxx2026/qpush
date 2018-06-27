@@ -124,6 +124,7 @@ func (s *Server) GetStatus() *server.Status {
 		ConnCtxMapSize  int
 	)
 
+	// for debug purpose
 	s.guidConn.Range(func(k, v interface{}) bool {
 		GUIDConnMapSize++
 		return true
@@ -354,6 +355,7 @@ func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte) {
 	}
 }
 
+// CloseConnection close specified connection
 func (s *Server) CloseConnection(conn net.Conn) error {
 	err := conn.Close()
 	if err != nil {
