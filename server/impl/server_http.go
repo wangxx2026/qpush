@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	_ "net/http/pprof"
 	"qpush/client"
 	"qpush/modules/config"
 	"qpush/modules/logger"
