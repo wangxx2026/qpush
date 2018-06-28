@@ -2,7 +2,8 @@ package config
 
 // Value contains all config info
 type Value struct {
-	Env string
+	Env       string
+	RedisAddr string
 }
 
 var (
