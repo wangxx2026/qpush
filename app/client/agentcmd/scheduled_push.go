@@ -2,6 +2,8 @@ package agentcmd
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"qpush/modules/config"
 	"qpush/modules/logger"
 	"strconv"
@@ -27,6 +29,14 @@ var scheduledPushCmd = &cobra.Command{
 		initConfig()
 
 		for {
+
+			resp, err := http.Get("http://baidu.com/")
+			if err != nil {
+				panic(err)
+			}
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			logger.Debug(string(body))
 			lastMsgID := getMessageOffset()
 
 			setMessageOffset(lastMsgID)
