@@ -3,6 +3,9 @@ package config
 // Value contains all config info
 type Value struct {
 	Env       string
+	Ak        string
+	Sk        string
+	GwHost    string
 	RedisAddr string
 }
 

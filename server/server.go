@@ -11,8 +11,8 @@ type Server interface {
 	Walk(f func(net.Conn, chan []byte) bool)
 	GetCtx(net.Conn) *ConnectionCtx
 	GetStatus() *Status
-	BindGUIDToConn(string, net.Conn)
-	KillGUID(guid string) error
+	BindAppGUIDToConn(int, string, net.Conn)
+	KillAppGUID(appID int, guid string) error
 	CloseConnection(conn net.Conn) error
 }
 
@@ -100,6 +100,8 @@ type CmdHandler interface {
 type ConnectionCtx struct {
 	Internal bool
 	GUID     string
+	AppID    int
+	Alias    string
 }
 
 // Status contains server status info

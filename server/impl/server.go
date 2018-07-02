@@ -141,21 +141,29 @@ func (s *Server) GetStatus() *server.Status {
 	return status
 }
 
-// BindGUIDToConn as names
-func (s *Server) BindGUIDToConn(guid string, conn net.Conn) {
-	oldConn, ok := s.guidConn.Load(guid)
+// BindAppGUIDToConn as names
+func (s *Server) BindAppGUIDToConn(appid int, guid string, conn net.Conn) {
+	appGUID := appGuid(appid, guid)
+
+	oldConn, ok := s.guidConn.Load(appGUID)
 	if ok {
 		// TODO handle error
 		s.CloseConnection(oldConn.(net.Conn))
 	}
-	s.guidConn.Store(guid, conn)
+	s.guidConn.Store(appGUID, conn)
 }
 
-// KillGUID kills specified connection, usually from another goroutine
-func (s *Server) KillGUID(guid string) error {
-	conn, ok := s.guidConn.Load(guid)
+func appGuid(appID int, guid string) string {
+	return fmt.Sprintf("%d:%s", appID, guid)
+}
+
+// KillAppGUID kills specified connection, usually from another goroutine
+func (s *Server) KillAppGUID(appID int, guid string) error {
+	appGUID := appGuid(appID, guid)
+
+	conn, ok := s.guidConn.Load(appGUID)
 	if !ok {
-		return fmt.Errorf("no connection for guid:%s", guid)
+		return fmt.Errorf("no connection for guid:%s", appGUID)
 	}
 
 	return s.CloseConnection(conn.(net.Conn))
@@ -370,7 +378,8 @@ func (s *Server) CloseConnection(conn net.Conn) error {
 	s.connWriteChans.Delete(conn)
 	ctx, ok := s.connCtx.Load(conn)
 	if ok && ctx.(*server.ConnectionCtx).GUID != "" {
-		s.guidConn.Delete(ctx.(*server.ConnectionCtx).GUID)
+		s.guidConn.Delete(
+			appGuid(ctx.(*server.ConnectionCtx).AppID, ctx.(*server.ConnectionCtx).GUID))
 	}
 	s.connCtx.Delete(conn)
 	return nil

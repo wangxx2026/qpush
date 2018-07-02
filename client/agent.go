@@ -14,5 +14,6 @@ type PushCmd struct {
 
 // KillCmd is struct for kill
 type KillCmd struct {
-	GUID string `json:"guid"`
+	GUID  string `json:"guid"`
+	AppID int    `json:"app_id"`
 }

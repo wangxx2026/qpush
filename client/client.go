@@ -21,10 +21,12 @@ type MsgConnection interface {
 
 // LoginCmd is for login
 type LoginCmd struct {
-	GUID string `json:"guid"`
+	GUID   string `json:"guid"`
+	AppID  int    `json:"app_id"`
+	AppKey string `json:"app_key"`
 }
 
 // AckCmd is for ack of message
 type AckCmd struct {
-	MsgID int `json:"msg_id"`
+	MsgIDS string `json:"msg_ids"`
 }

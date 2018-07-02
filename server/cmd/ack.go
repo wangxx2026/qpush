@@ -3,18 +3,19 @@ package cmd
 import (
 	"encoding/json"
 	"errors"
-	"net/url"
+	"fmt"
 	"qpush/client"
 	"qpush/modules/logger"
 	"qpush/server"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
 
 // NewAckCmd creates an AckCmd instance
 func NewAckCmd() *AckCmd {
-	cmd := &AckCmd{queuedAck: make(map[string]int), batchSignal: make(chan bool, 10)}
+	cmd := &AckCmd{queuedAck: make(map[string]map[int]bool), batchSignal: make(chan bool, 10)}
 	go cmd.syncAck()
 	return cmd
 }
@@ -23,7 +24,7 @@ func NewAckCmd() *AckCmd {
 type AckCmd struct {
 	lock        sync.Mutex
 	batchSignal chan bool
-	queuedAck   map[string]int
+	queuedAck   map[string]map[int]bool
 }
 
 const (
@@ -45,7 +46,7 @@ func (cmd *AckCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error)
 		logger.Error(errAckNoGUID)
 		return server.ErrorCmd, nil, errAckNoGUID
 	}
-	guid := param.Ctx.GUID
+	appGUID := fmt.Sprintf("%d:%s", param.Ctx.AppID, param.Ctx.GUID)
 
 	ackCmd := client.AckCmd{}
 	err := json.Unmarshal(param.Param, &ackCmd)
@@ -57,11 +58,20 @@ func (cmd *AckCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error)
 	cmd.lock.Lock()
 	defer cmd.lock.Unlock()
 
-	offset, ok := cmd.queuedAck[guid]
-	if !ok || ackCmd.MsgID > offset {
-		cmd.queuedAck[guid] = ackCmd.MsgID
+	_, ok := cmd.queuedAck[appGUID]
+	if !ok {
+		cmd.queuedAck[appGUID] = make(map[int]bool)
+	}
+	ids := strings.Split(ackCmd.MsgIDS, ",")
+	for _, id := range ids {
+		idInt, err := strconv.Atoi(id)
+		if err != nil {
+			return server.ErrorCmd, nil, errAckInValidParam
+		}
+		cmd.queuedAck[appGUID][idInt] = true
 	}
 
+	// TODO optimize
 	if len(cmd.queuedAck) >= BatchAckNumber {
 		cmd.batchSignal <- true
 	}
@@ -78,12 +88,17 @@ func (cmd *AckCmd) syncAck() {
 		}
 		cmd.lock.Lock()
 
-		ackData := make(url.Values)
-		for guid, offset := range cmd.queuedAck {
-			ackData.Set(guid, strconv.Itoa(offset))
+		ackData := make(map[string]string)
+		for appGUID, idMap := range cmd.queuedAck {
+			ids := make([]string, 0, len(idMap))
+			for id := range idMap {
+				ids = append(ids, string(id))
+			}
+
+			ackData[appGUID] = strings.Join(ids, ",")
 		}
 
-		cmd.queuedAck = make(map[string]int)
+		cmd.queuedAck = make(map[string]map[int]bool)
 		cmd.lock.Unlock()
 
 		// TODO send ackData
