@@ -7,8 +7,6 @@ import (
 	"qpush/client"
 	"qpush/modules/logger"
 	"qpush/server"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -62,13 +60,8 @@ func (cmd *AckCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error)
 	if !ok {
 		cmd.queuedAck[appGUID] = make(map[int]bool)
 	}
-	ids := strings.Split(ackCmd.MsgIDS, ",")
-	for _, id := range ids {
-		idInt, err := strconv.Atoi(id)
-		if err != nil {
-			return server.ErrorCmd, nil, errAckInValidParam
-		}
-		cmd.queuedAck[appGUID][idInt] = true
+	for _, id := range ackCmd.MsgIDS {
+		cmd.queuedAck[appGUID][id] = true
 	}
 
 	if len(cmd.queuedAck) >= BatchAckNumber || len(cmd.queuedAck[appGUID]) > BatchAckNumber {
@@ -95,17 +88,31 @@ func (cmd *AckCmd) syncAck() {
 		cmd.queuedAck = make(map[string]map[int]bool)
 		cmd.lock.Unlock()
 
-		ackData := make(map[string]string)
+		ackData := make(map[string][]string)
 		for appGUID, idMap := range queuedAck {
 			ids := make([]string, 0, len(idMap))
 			for id := range idMap {
 				ids = append(ids, string(id))
 			}
 
-			ackData[appGUID] = strings.Join(ids, ",")
+			ackData[appGUID] = ids
+
+			if len(ackData) > BatchAckNumber || len(ids) > BatchAckNumber {
+				cmd.syncBatch(ackData)
+				ackData = make(map[string][]string)
+			}
 		}
 
-		// TODO send ackData
+		if len(ackData) > 0 {
+			cmd.syncBatch(ackData)
+		}
+
+		ackData = nil // maybe good for gc
 
 	}
+
+}
+
+func (cmd *AckCmd) syncBatch(ackData map[string][]string) {
+
 }

@@ -28,5 +28,5 @@ type LoginCmd struct {
 
 // AckCmd is for ack of message
 type AckCmd struct {
-	MsgIDS string `json:"msg_ids"`
+	MsgIDS []int `json:"msg_ids"`
 }
