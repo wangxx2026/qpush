@@ -3,6 +3,7 @@ package impl
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -36,6 +37,12 @@ const (
 	DefaultInternalReadTimeout = 10 * 60
 	// DefaultWriteTimeout is default timeout for write
 	DefaultWriteTimeout = time.Second * 10
+)
+
+var (
+	errConnectionNotExist   = errors.New("connection not exists")
+	errWriteChannelNotExist = errors.New("write channel not exists")
+	errWriteChannelFull     = errors.New("write channel is full")
 )
 
 // NewServer creates a server instance
@@ -151,6 +158,26 @@ func (s *Server) BindAppGUIDToConn(appid int, guid string, conn net.Conn) {
 		s.CloseConnection(oldConn.(net.Conn))
 	}
 	s.guidConn.Store(appGUID, conn)
+}
+
+// SendTo send packet to specified connection
+func (s *Server) SendTo(appid int, guid string, packet []byte) error {
+	conn, ok := s.guidConn.Load(appGuid(appid, guid))
+	if !ok {
+		return errConnectionNotExist
+	}
+
+	writeChann, ok := s.connWriteChans.Load(conn)
+	if !ok {
+		return errWriteChannelNotExist
+	}
+
+	select {
+	case writeChann.(chan []byte) <- packet:
+		return nil
+	default:
+		return errWriteChannelFull
+	}
 }
 
 func appGuid(appID int, guid string) string {

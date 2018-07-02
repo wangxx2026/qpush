@@ -1,9 +1,11 @@
 package main
 
 import (
+	"qpush/client"
 	"qpush/client/impl"
 	"qpush/modules/logger"
 	"qpush/server"
+	"strconv"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -12,12 +14,18 @@ import (
 func main() {
 
 	var rootCmd = &cobra.Command{
-		Use:   "qpushclient [public address] [guid]",
+		Use:   "qpushclient [public address] [appid] [appkey] [guid]",
 		Short: "login into [public address] as [guid] and subscribe for messages",
-		Args:  cobra.MinimumNArgs(2),
+		Args:  cobra.MinimumNArgs(4),
 		Run: func(cmd *cobra.Command, args []string) {
-			client := impl.NewClient()
-			conn := client.Dial(args[0], args[1])
+			cli := impl.NewClient()
+			appID, err := strconv.Atoi(args[1])
+			if err != nil {
+				logger.Error("invalid appid")
+				return
+			}
+			loginCmd := client.LoginCmd{GUID: args[3], AppID: appID, AppKey: args[2]}
+			conn := cli.Dial(args[0], &loginCmd)
 			if conn == nil {
 				logger.Error("failed to dial")
 				return
@@ -33,7 +41,7 @@ func main() {
 					conn.SendCmd(server.HeartBeatCmd, nil)
 				}
 			}()
-			err := conn.Subscribe(cb)
+			err = conn.Subscribe(cb)
 			logger.Error("Subscribe error", err)
 		}}
 

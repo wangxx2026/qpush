@@ -1,7 +1,7 @@
 package main
 
 import (
-	"qpush/app/client/agentcmd"
+	"qpush/app/client/agent/agentcmd"
 )
 
 func main() {

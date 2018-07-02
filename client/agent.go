@@ -7,9 +7,13 @@ type Agent interface {
 
 // PushCmd is struct for push
 type PushCmd struct {
-	MsgID   int    `json:"msg_id"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	MsgID        int    `json:"msg_id"`
+	Title        string `json:"title"`
+	Content      string `json:"content"`
+	Transmission string `json:"transmission"`
+	Unfold       string `json:"unfold"`
+	AppID        int    `json:"app_id"`
+	GUID         string `json:"guid"`
 }
 
 // KillCmd is struct for kill

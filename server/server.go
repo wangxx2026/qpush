@@ -12,6 +12,7 @@ type Server interface {
 	GetCtx(net.Conn) *ConnectionCtx
 	GetStatus() *Status
 	BindAppGUIDToConn(int, string, net.Conn)
+	SendTo(int, string, []byte) error
 	KillAppGUID(appID int, guid string) error
 	CloseConnection(conn net.Conn) error
 }

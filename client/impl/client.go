@@ -22,7 +22,7 @@ func NewClient() *Client {
 }
 
 // Dial is called to initiate connections
-func (cli *Client) Dial(address string, guid string) *MsgConnection {
+func (cli *Client) Dial(address string, cmd *client.LoginCmd) *MsgConnection {
 	conn, err := net.Dial("tcp", address)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to dial %s", address))
@@ -30,7 +30,6 @@ func (cli *Client) Dial(address string, guid string) *MsgConnection {
 	}
 
 	mc := &MsgConnection{conn: conn}
-	cmd := &client.LoginCmd{GUID: guid}
 	_, err = mc.SendCmd(server.LoginCmd, cmd)
 	if err != nil {
 		logger.Error("failed to send login cmd", err)
