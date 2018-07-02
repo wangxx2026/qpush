@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"qpush/client"
+	"qpush/modules/http"
 	"qpush/modules/logger"
 	"qpush/server"
 	"sync"
@@ -88,18 +89,18 @@ func (cmd *AckCmd) syncAck() {
 		cmd.queuedAck = make(map[string]map[int]bool)
 		cmd.lock.Unlock()
 
-		ackData := make(map[string][]string)
+		ackData := make(map[string][]int)
 		for appGUID, idMap := range queuedAck {
-			ids := make([]string, 0, len(idMap))
+			ids := make([]int, 0, len(idMap))
 			for id := range idMap {
-				ids = append(ids, string(id))
+				ids = append(ids, id)
 			}
 
 			ackData[appGUID] = ids
 
 			if len(ackData) > BatchAckNumber || len(ids) > BatchAckNumber {
 				cmd.syncBatch(ackData)
-				ackData = make(map[string][]string)
+				ackData = make(map[string][]int)
 			}
 		}
 
@@ -113,6 +114,42 @@ func (cmd *AckCmd) syncAck() {
 
 }
 
-func (cmd *AckCmd) syncBatch(ackData map[string][]string) {
+type ackRequest struct {
+	NotifyData []ackRecord `json:"notify_data"`
+}
+type ackRecord struct {
+	MsgIDS []int  `json:"msg_ids"`
+	GUID   string `json:"guid"`
+}
+type ackResponse struct {
+	Code int    `json:"code"`
+	MSG  string `json:"msg"`
+}
+
+func (cmd *AckCmd) syncBatch(ackData map[string][]int) {
+	request := ackRequest{NotifyData: make([]ackRecord, 0, len(ackData))}
+	for appGUID, ids := range ackData {
+		record := ackRecord{MsgIDS: ids, GUID: appGUID}
+		request.NotifyData = append(request.NotifyData, record)
+	}
+
+	for i := 0; i < 3; i++ {
+		// send ack message
+		resp, err := http.DoAkSkRequest(http.PostMethod, "/v1/pushaksk/notifymsg", &request)
+		if err != nil {
+			logger.Error("error in DoAkSkRequest", err)
+			continue
+		}
+
+		var result ackResponse
+		err = json.Unmarshal(resp, &result)
+		if err != nil {
+			logger.Error("error in DoAkSkRequest response", err)
+			continue
+		}
+		if result.Code == 0 {
+			return
+		}
+	}
 
 }
