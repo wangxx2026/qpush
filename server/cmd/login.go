@@ -63,10 +63,7 @@ func (cmd *LoginCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, erro
 	// enlarge read timeout after client login
 	param.Reader.SetReadTimeout(DefaultReadTimeoutAfterLogin)
 
-	// TODO fetch offline messages
-	// client := http.Client{Timeout: 3*time.Second}
-	// resp, err := client.Get("http://example.com")
-
+	// fetch offline messages
 	data := map[string]interface{}{"app_id": loginCmd.AppID, "app_key": loginCmd.AppKey, "guid": loginCmd.GUID}
 	resp, err := http.DoAkSkRequest(http.PostMethod, "/v1/pushaksk/offlinemsg", data)
 	if err != nil {

@@ -15,7 +15,7 @@ import (
 
 // NewAckCmd creates an AckCmd instance
 func NewAckCmd() *AckCmd {
-	cmd := &AckCmd{queuedAck: make(map[string]map[int]bool), batchSignal: make(chan bool, 10)}
+	cmd := &AckCmd{queuedAck: make(map[string]map[int]bool), batchSignal: make(chan bool, 1)}
 	go cmd.syncAck()
 	return cmd
 }
@@ -71,9 +71,12 @@ func (cmd *AckCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error)
 		cmd.queuedAck[appGUID][idInt] = true
 	}
 
-	// TODO optimize
-	if len(cmd.queuedAck) >= BatchAckNumber {
-		cmd.batchSignal <- true
+	if len(cmd.queuedAck) >= BatchAckNumber || len(cmd.queuedAck[appGUID]) > BatchAckNumber {
+		select {
+		case cmd.batchSignal <- true:
+		default:
+		}
+
 	}
 
 	logger.Debug("AckCmd called")
@@ -87,9 +90,13 @@ func (cmd *AckCmd) syncAck() {
 		case <-time.After(BatchAckTimeout):
 		}
 		cmd.lock.Lock()
+		// fast copy and unlock
+		queuedAck := cmd.queuedAck
+		cmd.queuedAck = make(map[string]map[int]bool)
+		cmd.lock.Unlock()
 
 		ackData := make(map[string]string)
-		for appGUID, idMap := range cmd.queuedAck {
+		for appGUID, idMap := range queuedAck {
 			ids := make([]string, 0, len(idMap))
 			for id := range idMap {
 				ids = append(ids, string(id))
@@ -97,9 +104,6 @@ func (cmd *AckCmd) syncAck() {
 
 			ackData[appGUID] = strings.Join(ids, ",")
 		}
-
-		cmd.queuedAck = make(map[string]map[int]bool)
-		cmd.lock.Unlock()
 
 		// TODO send ackData
 
