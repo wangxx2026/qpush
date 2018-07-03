@@ -362,7 +362,7 @@ func (s *Server) handleConnection(conn net.Conn, internal bool) {
 		logger.Debug("cmdParam is", string(payload[12:]))
 		responseCmd, response, err := s.handler.Call(cmd, internal, &params)
 		if err != nil {
-			logger.Error("handler.Call return error:%s", err)
+			logger.Error("handler.Call return error:", err)
 			return
 		}
 
