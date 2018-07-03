@@ -33,7 +33,8 @@ func TestMassiveConnections(t *testing.T) {
 			defer wgDone.Done()
 
 			// fmt.Println("before dial")
-			conn := c.Dial(PublicAddress, strconv.Itoa(n))
+			loginCmd := &client.LoginCmd{GUID: strconv.Itoa(n), AppID: 1008, AppKey: "ddddddd"}
+			conn := c.Dial(PublicAddress, loginCmd)
 			if conn == nil {
 				t.Fatalf("failed to dial")
 				return
