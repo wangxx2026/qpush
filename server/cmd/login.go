@@ -52,7 +52,7 @@ func (cmd *LoginCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, erro
 	loginCmd := client.LoginCmd{}
 	err := json.Unmarshal(param.Param, &loginCmd)
 	if err != nil {
-		logger.Error(errLoginInValidParam)
+		logger.Error(errLoginInValidParam, string(param.Param))
 		return server.ErrorCmd, nil, errLoginInValidParam
 	}
 
