@@ -9,6 +9,7 @@ import (
 	"qpush/modules/config"
 	"qpush/modules/logger"
 	"qpush/server"
+	"runtime"
 )
 
 // this file is for debug only
@@ -55,6 +56,7 @@ func (s *Server) startHTTPServer() *http.Server {
 			return true
 		})
 
+		runtime.GC()
 		io.WriteString(w, "ok\n")
 	})
 
