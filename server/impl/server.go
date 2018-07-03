@@ -162,7 +162,7 @@ func (s *Server) GetStatus() *server.Status {
 
 // BindAppGUIDToConn as names
 func (s *Server) BindAppGUIDToConn(appid int, guid string, conn net.Conn) {
-	appGUID := appGuid(appid, guid)
+	appGUID := getAppGUID(appid, guid)
 
 	oldConn, ok := s.guidConn.Load(appGUID)
 	if ok {
@@ -174,7 +174,7 @@ func (s *Server) BindAppGUIDToConn(appid int, guid string, conn net.Conn) {
 
 // SendTo send packet to specified connection
 func (s *Server) SendTo(appid int, guid string, packet []byte) error {
-	conn, ok := s.guidConn.Load(appGuid(appid, guid))
+	conn, ok := s.guidConn.Load(getAppGUID(appid, guid))
 	if !ok {
 		return errConnectionNotExist
 	}
@@ -192,13 +192,13 @@ func (s *Server) SendTo(appid int, guid string, packet []byte) error {
 	}
 }
 
-func appGuid(appID int, guid string) string {
+func getAppGUID(appID int, guid string) string {
 	return fmt.Sprintf("%d:%s", appID, guid)
 }
 
 // KillAppGUID kills specified connection, usually from another goroutine
 func (s *Server) KillAppGUID(appID int, guid string) error {
-	appGUID := appGuid(appID, guid)
+	appGUID := getAppGUID(appID, guid)
 
 	conn, ok := s.guidConn.Load(appGUID)
 	if !ok {
@@ -425,7 +425,7 @@ func (s *Server) CloseConnection(conn net.Conn) error {
 		close(ctx.(*server.ConnectionCtx).CloseChan)
 		if ctx.(*server.ConnectionCtx).GUID != "" {
 			s.guidConn.Delete(
-				appGuid(ctx.(*server.ConnectionCtx).AppID, ctx.(*server.ConnectionCtx).GUID))
+				getAppGUID(ctx.(*server.ConnectionCtx).AppID, ctx.(*server.ConnectionCtx).GUID))
 		}
 	}
 
