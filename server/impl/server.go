@@ -23,6 +23,7 @@ type Server struct {
 	readBufferSize int
 	handler        server.Handler
 	upTime         time.Time
+	routinesGroup  sync.WaitGroup
 
 	// for heartbeat
 	hbConfig server.HeartBeatConfig
@@ -73,23 +74,38 @@ func (s *Server) ListenAndServe(address string, internalAddress string) error {
 	signal.Notify(quitChan, os.Interrupt, os.Kill, syscall.SIGTERM)
 
 	done := make(chan bool)
-	wg := sync.WaitGroup{}
 
-	wg.Add(1)
-	go s.listenAndServe(address, false, done, &wg)
-	wg.Add(1)
-	go s.listenAndServe(internalAddress, true, done, &wg)
+	s.goFunc(func() {
+		s.listenAndServe(address, false, done)
+	})
+	s.goFunc(func() {
+		s.listenAndServe(internalAddress, true, done)
+	})
+	s.goFunc(func() {
+		s.heartBeat(done)
+	})
+	s.goFunc(func() {
+		s.handleHTTP(done)
+	})
+	s.goFunc(func() {
+		s.handleSignal(quitChan, done)
+	})
 
-	wg.Add(1)
-	go s.heartBeat(done, &wg)
-
-	wg.Add(1)
-	go s.handleHTTP(done, &wg)
-
-	go s.handleSignal(quitChan, done)
-	wg.Wait()
+	s.waitShutdown()
 
 	return nil
+}
+
+func (s *Server) goFunc(f func()) {
+	s.routinesGroup.Add(1)
+	go func() {
+		defer s.routinesGroup.Done()
+		f()
+	}()
+}
+
+func (s *Server) waitShutdown() {
+	s.routinesGroup.Wait()
 }
 
 // Walk walks each connection
@@ -213,8 +229,7 @@ func (s *Server) handleSignal(quitChan chan os.Signal, done chan bool) {
 	close(done)
 }
 
-func (s *Server) heartBeat(done chan bool, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (s *Server) heartBeat(done chan bool) {
 
 	ticker := time.NewTicker(s.hbConfig.Interval)
 	for {
@@ -234,9 +249,7 @@ func (s *Server) heartBeat(done chan bool, wg *sync.WaitGroup) {
 
 }
 
-func (s *Server) listenAndServe(address string, internal bool, done chan bool, wg *sync.WaitGroup) {
-
-	defer wg.Done()
+func (s *Server) listenAndServe(address string, internal bool, done chan bool) {
 
 	listener, err := net.Listen("tcp", address)
 
@@ -272,12 +285,13 @@ func (s *Server) listenAndServe(address string, internal bool, done chan bool, w
 			continue
 		}
 
-		wg.Add(1)
-		go s.handleConnection(conn, internal, done, wg)
+		s.goFunc(func() {
+			s.handleConnection(conn, internal, done)
+		})
 	}
 }
 
-func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, wg *sync.WaitGroup) {
+func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool) {
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -285,7 +299,6 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool, 
 		}
 	}()
 	defer s.CloseConnection(conn)
-	defer wg.Done()
 
 	ctx := &server.ConnectionCtx{Internal: internal}
 	//for query from other G

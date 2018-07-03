@@ -10,13 +10,11 @@ import (
 	"qpush/modules/config"
 	"qpush/modules/logger"
 	"qpush/server"
-	"sync"
 )
 
 // this file is for debug only
 
-func (s *Server) handleHTTP(done chan bool, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (s *Server) handleHTTP(done chan bool) {
 
 	server := s.startHTTPServer()
 
