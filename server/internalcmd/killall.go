@@ -15,7 +15,7 @@ func (cmd *KillAllCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, er
 	selfConn := param.Conn
 	s := param.Server
 
-	s.Walk(func(conn net.Conn, writeChan chan []byte) bool {
+	s.Walk(func(conn net.Conn, ctx *server.ConnectionCtx) bool {
 		if selfConn != conn {
 			s.CloseConnection(conn)
 		}

@@ -108,9 +108,9 @@ func (s *Server) waitShutdown() {
 }
 
 // Walk walks each connection
-func (s *Server) Walk(f func(net.Conn, chan []byte) bool) {
+func (s *Server) Walk(f func(net.Conn, *server.ConnectionCtx) bool) {
 	s.connCtx.Range(func(k, v interface{}) bool {
-		return f(k.(net.Conn), v.(*server.ConnectionCtx).WriteChan)
+		return f(k.(net.Conn), v.(*server.ConnectionCtx))
 	})
 }
 
@@ -276,7 +276,7 @@ func (s *Server) listenAndServe(address string, internal bool) {
 
 			// DEBUG only
 			status := s.GetStatus()
-			logger.Error("connection count is", status.ConnectionCount)
+			logger.Error("connection count is", status.ConnCtxMapSize)
 
 			continue
 		}

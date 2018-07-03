@@ -8,7 +8,7 @@ import (
 // Server is interface for server
 type Server interface {
 	ListenAndServe(address string, internalAddress string) error
-	Walk(f func(net.Conn, chan []byte) bool)
+	Walk(f func(net.Conn, *ConnectionCtx) bool)
 	GetCtx(net.Conn) *ConnectionCtx
 	GetStatus() *Status
 	BindAppGUIDToConn(int, string, net.Conn)
@@ -109,7 +109,6 @@ type ConnectionCtx struct {
 
 // Status contains server status info
 type Status struct {
-	ConnectionCount int
 	GUIDCount       int
 	GUIDConnMapSize int
 	ConnCtxMapSize  int

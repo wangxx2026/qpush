@@ -41,15 +41,14 @@ func (s *Server) startHTTPServer() *http.Server {
 		payload, _ := json.Marshal(cmd)
 		packet := MakePacket(0, server.ForwardCmd, payload)
 
-		s.Walk(func(conn net.Conn, writeChan chan []byte) bool {
+		s.Walk(func(conn net.Conn, ctx *server.ConnectionCtx) bool {
 
-			ctx := s.GetCtx(conn)
 			if ctx.Internal {
 				return true
 			}
 
 			select {
-			case writeChan <- packet:
+			case ctx.WriteChan <- packet:
 			default:
 				logger.Error("writeChan blocked for", ctx.GUID)
 			}

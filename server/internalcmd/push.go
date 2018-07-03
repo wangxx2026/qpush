@@ -48,14 +48,13 @@ func (cmd *PushCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 		return server.PushRespCmd, true, s.SendTo(pushCmd.AppID, pushCmd.GUID, packet)
 	}
 
-	s.Walk(func(conn net.Conn, writeChan chan []byte) bool {
+	s.Walk(func(conn net.Conn, ctx *server.ConnectionCtx) bool {
 		if selfConn != conn {
-			ctx := s.GetCtx(conn)
 			if ctx.Internal {
 				return true
 			}
 			select {
-			case writeChan <- packet:
+			case ctx.WriteChan <- packet:
 			default:
 				logger.Error("writeChan blocked for", ctx.GUID)
 			}
