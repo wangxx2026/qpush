@@ -7,6 +7,7 @@ type Value struct {
 	Sk        string
 	GwHost    string
 	RedisAddr string
+	Servers   []string
 }
 
 var (

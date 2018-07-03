@@ -44,10 +44,11 @@ func (cmd *PushCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 	packet := impl.MakePacket(param.RequestID, server.ForwardCmd, bytes)
 
 	// single mode
-	if pushCmd.AppID != 0 && pushCmd.GUID != "" {
-		return server.PushRespCmd, true, s.SendTo(pushCmd.AppID, pushCmd.GUID, packet)
+	if pushCmd.AppID != 0 && len(pushCmd.GUID) > 0 {
+		return server.PushRespCmd, s.SendTo(pushCmd.AppID, pushCmd.GUID, packet), nil
 	}
 
+	var count int
 	s.Walk(func(conn net.Conn, ctx *server.ConnectionCtx) bool {
 		if selfConn != conn {
 			if ctx.Internal {
@@ -55,6 +56,7 @@ func (cmd *PushCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 			}
 			select {
 			case ctx.WriteChan <- packet:
+				count++
 			default:
 				logger.Error("writeChan blocked for", ctx.GUID)
 			}
@@ -63,5 +65,5 @@ func (cmd *PushCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 		return true
 	})
 
-	return server.PushRespCmd, true, nil
+	return server.PushRespCmd, count, nil
 }

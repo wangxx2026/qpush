@@ -3,7 +3,6 @@ package impl
 import (
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -38,12 +37,6 @@ const (
 	DefaultInternalReadTimeout = 10 * 60
 	// DefaultWriteTimeout is default timeout for write in seconds
 	DefaultWriteTimeout = 10
-)
-
-var (
-	errConnectionNotExist   = errors.New("connection not exists")
-	errWriteChannelNotExist = errors.New("write channel not exists")
-	errWriteChannelFull     = errors.New("write channel is full")
 )
 
 // NewServer creates a server instance
@@ -173,23 +166,28 @@ func (s *Server) BindAppGUIDToConn(appid int, guid string, conn net.Conn) {
 }
 
 // SendTo send packet to specified connection
-func (s *Server) SendTo(appid int, guid string, packet []byte) error {
-	conn, ok := s.guidConn.Load(getAppGUID(appid, guid))
-	if !ok {
-		return errConnectionNotExist
+func (s *Server) SendTo(appid int, guids []string, packet []byte) int {
+	var count int
+	for _, guid := range guids {
+		conn, ok := s.guidConn.Load(getAppGUID(appid, guid))
+		if !ok {
+			continue
+		}
+
+		ctx, ok := s.connCtx.Load(conn)
+		if !ok {
+			continue
+		}
+
+		select {
+		case ctx.(*server.ConnectionCtx).WriteChan <- packet:
+			count++
+		default:
+			continue
+		}
 	}
 
-	ctx, ok := s.connCtx.Load(conn)
-	if !ok {
-		return errWriteChannelNotExist
-	}
-
-	select {
-	case ctx.(*server.ConnectionCtx).WriteChan <- packet:
-		return nil
-	default:
-		return errWriteChannelFull
-	}
+	return count
 }
 
 func getAppGUID(appID int, guid string) string {
