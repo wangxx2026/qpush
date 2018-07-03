@@ -14,11 +14,11 @@ import (
 
 // this file is for debug only
 
-func (s *Server) handleHTTP(done chan bool) {
+func (s *Server) handleHTTP() {
 
 	server := s.startHTTPServer()
 
-	<-done
+	<-s.done
 
 	if err := server.Shutdown(nil); err != nil {
 		panic(err)

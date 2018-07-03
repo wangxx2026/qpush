@@ -17,13 +17,13 @@ import (
 
 // Server is data struct for server
 type Server struct {
-	connWriteChans sync.Map
 	guidConn       sync.Map // [string]net.Conn
 	connCtx        sync.Map // [net.Conn]*ConnectionCtx
 	readBufferSize int
 	handler        server.Handler
 	upTime         time.Time
 	routinesGroup  sync.WaitGroup
+	done           chan bool
 
 	// for heartbeat
 	hbConfig server.HeartBeatConfig
@@ -36,8 +36,8 @@ const (
 	DefaultReadTimeout = 10 * 60 //TODO change back
 	// DefaultInternalReadTimeout is read timeout for internal connections
 	DefaultInternalReadTimeout = 10 * 60
-	// DefaultWriteTimeout is default timeout for write
-	DefaultWriteTimeout = time.Second * 10
+	// DefaultWriteTimeout is default timeout for write in seconds
+	DefaultWriteTimeout = 10
 )
 
 var (
@@ -63,6 +63,7 @@ func NewServer(c *server.Config) *Server {
 	return &Server{
 		readBufferSize: readBufferSize,
 		handler:        handler,
+		done:           make(chan bool),
 		upTime:         time.Now(),
 		hbConfig:       c.HBConfig}
 }
@@ -73,22 +74,20 @@ func (s *Server) ListenAndServe(address string, internalAddress string) error {
 	quitChan := make(chan os.Signal, 1)
 	signal.Notify(quitChan, os.Interrupt, os.Kill, syscall.SIGTERM)
 
-	done := make(chan bool)
-
 	s.goFunc(func() {
-		s.listenAndServe(address, false, done)
+		s.listenAndServe(address, false)
 	})
 	s.goFunc(func() {
-		s.listenAndServe(internalAddress, true, done)
+		s.listenAndServe(internalAddress, true)
 	})
 	s.goFunc(func() {
-		s.heartBeat(done)
+		s.heartBeat()
 	})
 	s.goFunc(func() {
-		s.handleHTTP(done)
+		s.handleHTTP()
 	})
 	s.goFunc(func() {
-		s.handleSignal(quitChan, done)
+		s.handleSignal(quitChan)
 	})
 
 	s.waitShutdown()
@@ -110,8 +109,8 @@ func (s *Server) waitShutdown() {
 
 // Walk walks each connection
 func (s *Server) Walk(f func(net.Conn, chan []byte) bool) {
-	s.connWriteChans.Range(func(k, v interface{}) bool {
-		return f(k.(net.Conn), v.(chan []byte))
+	s.connCtx.Range(func(k, v interface{}) bool {
+		return f(k.(net.Conn), v.(*server.ConnectionCtx).WriteChan)
 	})
 }
 
@@ -129,12 +128,9 @@ func (s *Server) GetCtx(conn net.Conn) *server.ConnectionCtx {
 func (s *Server) GetStatus() *server.Status {
 
 	guidCount := 0
-	count := 0
-	s.connWriteChans.Range(func(k, v interface{}) bool {
+	s.connCtx.Range(func(k, v interface{}) bool {
 
-		count++
-
-		ctx := s.GetCtx(k.(net.Conn))
+		ctx := v.(*server.ConnectionCtx)
 		if ctx.GUID != "" {
 			guidCount++
 		}
@@ -157,7 +153,7 @@ func (s *Server) GetStatus() *server.Status {
 	})
 
 	status := &server.Status{
-		Uptime: s.upTime, ConnectionCount: count, GUIDCount: guidCount,
+		Uptime: s.upTime, GUIDCount: guidCount,
 		GUIDConnMapSize: GUIDConnMapSize,
 		ConnCtxMapSize:  ConnCtxMapSize}
 
@@ -183,13 +179,13 @@ func (s *Server) SendTo(appid int, guid string, packet []byte) error {
 		return errConnectionNotExist
 	}
 
-	writeChann, ok := s.connWriteChans.Load(conn)
+	ctx, ok := s.connCtx.Load(conn)
 	if !ok {
 		return errWriteChannelNotExist
 	}
 
 	select {
-	case writeChann.(chan []byte) <- packet:
+	case ctx.(*server.ConnectionCtx).WriteChan <- packet:
 		return nil
 	default:
 		return errWriteChannelFull
@@ -223,18 +219,18 @@ func MakePacket(requestID uint64, cmd server.Cmd, payload []byte) []byte {
 	return buf
 }
 
-func (s *Server) handleSignal(quitChan chan os.Signal, done chan bool) {
+func (s *Server) handleSignal(quitChan chan os.Signal) {
 	<-quitChan
 	logger.Debug("signal captured")
-	close(done)
+	close(s.done)
 }
 
-func (s *Server) heartBeat(done chan bool) {
+func (s *Server) heartBeat() {
 
 	ticker := time.NewTicker(s.hbConfig.Interval)
 	for {
 		select {
-		case <-done:
+		case <-s.done:
 			return
 		case <-ticker.C:
 			for {
@@ -249,7 +245,7 @@ func (s *Server) heartBeat(done chan bool) {
 
 }
 
-func (s *Server) listenAndServe(address string, internal bool, done chan bool) {
+func (s *Server) listenAndServe(address string, internal bool) {
 
 	listener, err := net.Listen("tcp", address)
 
@@ -265,7 +261,7 @@ func (s *Server) listenAndServe(address string, internal bool, done chan bool) {
 	}
 	for {
 		select {
-		case <-done:
+		case <-s.done:
 			return
 		default:
 		}
@@ -286,12 +282,12 @@ func (s *Server) listenAndServe(address string, internal bool, done chan bool) {
 		}
 
 		s.goFunc(func() {
-			s.handleConnection(conn, internal, done)
+			s.handleConnection(conn, internal)
 		})
 	}
 }
 
-func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool) {
+func (s *Server) handleConnection(conn net.Conn, internal bool) {
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -300,11 +296,12 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool) 
 	}()
 	defer s.CloseConnection(conn)
 
-	ctx := &server.ConnectionCtx{Internal: internal}
-	//for query from other G
+	// store pointer
+	ctx := &server.ConnectionCtx{
+		Internal: internal, WriteChan: make(chan []byte, 30),
+		CloseChan: make(chan bool)}
+	// for query from other G
 	s.connCtx.Store(conn, ctx)
-	writeChan := make(chan []byte, 30)
-	s.connWriteChans.Store(conn, writeChan)
 
 	var readTimeout int
 	if internal {
@@ -314,11 +311,15 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool) 
 	}
 	r := NewStreamReaderWithTimeout(conn, readTimeout)
 
-	go s.handleWrite(conn, writeChan)
+	s.goFunc(func() {
+		s.handleWrite(conn, ctx.WriteChan, ctx.CloseChan)
+	})
 
 	for {
 		select {
-		case <-done:
+		case <-s.done:
+			return
+		case <-ctx.CloseChan:
 			return
 		default:
 		}
@@ -379,27 +380,33 @@ func (s *Server) handleConnection(conn net.Conn, internal bool, done chan bool) 
 		logger.Debug("requestID", requestID, "responseCmd", responseCmd, "jsonResponse", string(jsonResponse))
 		packet := MakePacket(requestID, responseCmd, jsonResponse)
 		logger.Debug("packet is", packet)
-		writeChan <- packet
+		ctx.WriteChan <- packet
 
 	}
 
 }
 
-func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte) {
-	w := NewStreamWriter(conn)
+func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte, closeChan chan bool) {
+	w := NewStreamWriterWithTimeout(conn, DefaultWriteTimeout)
 	for {
-		bytes := <-writeChann
-
-		// logger.Debug("writeChann fired")
-		if bytes == nil {
+		select {
+		case <-s.done:
 			return
-		}
-
-		// logger.Debug("WriteBytes called", bytes)
-		err := w.WriteBytes(bytes)
-		if err != nil {
-			s.CloseConnection(conn)
+		case <-closeChan:
 			return
+		case bytes := <-writeChann:
+
+			// logger.Debug("writeChann fired")
+			if bytes == nil {
+				return
+			}
+
+			// logger.Debug("WriteBytes called", bytes)
+			err := w.WriteBytes(bytes)
+			if err != nil {
+				s.CloseConnection(conn)
+				return
+			}
 		}
 	}
 }
@@ -411,16 +418,16 @@ func (s *Server) CloseConnection(conn net.Conn) error {
 		logger.Error("failed to close connection", err)
 		return err
 	}
-	writeChann, ok := s.connWriteChans.Load(conn)
-	if ok {
-		close(writeChann.(chan []byte))
-	}
-	s.connWriteChans.Delete(conn)
 	ctx, ok := s.connCtx.Load(conn)
-	if ok && ctx.(*server.ConnectionCtx).GUID != "" {
-		s.guidConn.Delete(
-			appGuid(ctx.(*server.ConnectionCtx).AppID, ctx.(*server.ConnectionCtx).GUID))
+	if ok {
+		s.connCtx.Delete(conn)
+
+		close(ctx.(*server.ConnectionCtx).CloseChan)
+		if ctx.(*server.ConnectionCtx).GUID != "" {
+			s.guidConn.Delete(
+				appGuid(ctx.(*server.ConnectionCtx).AppID, ctx.(*server.ConnectionCtx).GUID))
+		}
 	}
-	s.connCtx.Delete(conn)
+
 	return nil
 }
