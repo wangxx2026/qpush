@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	_ "net/http/pprof"
 	"qpush/modules/config"
 	"qpush/server"
 	"qpush/server/cmd"
