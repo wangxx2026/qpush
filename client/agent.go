@@ -12,6 +12,7 @@ type PushCmd struct {
 	Content      string   `json:"content"`
 	Transmission string   `json:"transmission"`
 	Unfold       string   `json:"unfold"`
+	PassThrough  int      `json:"pass_through"`
 	AppID        int      `json:"app_id"`
 	GUID         []string `json:"guid"`
 }

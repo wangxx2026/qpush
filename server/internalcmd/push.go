@@ -35,7 +35,7 @@ func (cmd *PushCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 
 	msg := cmdpackage.Msg{
 		MsgID: pushCmd.MsgID, Title: pushCmd.Title, Content: pushCmd.Content,
-		Transmission: pushCmd.Transmission, Unfold: pushCmd.Unfold}
+		Transmission: pushCmd.Transmission, Unfold: pushCmd.Unfold, PassThrough: pushCmd.PassThrough}
 	bytes, err := json.Marshal(&msg)
 	if err != nil {
 		logger.Error("failed to marshal")
