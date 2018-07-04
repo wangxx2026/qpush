@@ -152,6 +152,10 @@ func (cmd *AckCmd) syncBatch(ackData map[string][]int) {
 		if result.Code == 0 {
 			return
 		}
+
+		logger.Error("error in result.Code", result.Code)
+		time.Sleep(time.Second)
+
 	}
 
 }
