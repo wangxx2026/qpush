@@ -32,6 +32,7 @@ var queuePushCmd = &cobra.Command{
 	Use:   "queue_push",
 	Short: "get messages to send and push to server",
 	Run: func(cmd *cobra.Command, args []string) {
+
 		initConfig()
 
 		msgs := getMsgs()
@@ -99,7 +100,7 @@ func handleMsg(d *amqp.Delivery) {
 	}
 	routinesGroup.Wait()
 
-	// d.Ack(false)
+	d.Ack(false)
 }
 
 func goFunc(routinesGroup *sync.WaitGroup, f func()) {
