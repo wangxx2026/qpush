@@ -25,7 +25,8 @@ var (
 
 const (
 	queue         = "push-queue"
-	prefetchCount = 1
+	prefetchCount = 100
+	pushTimeout   = 30
 )
 
 var queuePushCmd = &cobra.Command{
@@ -90,7 +91,7 @@ func handleMsg(d *amqp.Delivery) {
 				panic("failed to dial")
 			}
 
-			_, err := conn.SendCmdBlocking(server.PushCmd, &cmd)
+			_, err := conn.SendCmdBlockingWithTimeout(server.PushCmd, &cmd, pushTimeout)
 			if err != nil {
 				logger.Error("SendCmdBlocking failed:", err)
 				panic("SendCmdBlocking failed")

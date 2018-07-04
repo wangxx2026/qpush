@@ -16,7 +16,9 @@ type Client interface {
 type MsgConnection interface {
 	SendCmd(cmd server.Cmd, cmdParam interface{}) (uint64, error)
 	SendCmdBlocking(cmd server.Cmd, cmdParam interface{}) ([]byte, error)
+	SendCmdBlockingWithTimeout(cmd server.Cmd, cmdParam interface{}, seconds int) ([]byte, error)
 	Subscribe(cb OnResponse) error
+	SubscribeWithTimeout(cb OnResponse, seconds int) error
 }
 
 // LoginCmd is for login

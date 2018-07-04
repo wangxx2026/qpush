@@ -73,8 +73,13 @@ func PoorManUUID() uint64 {
 	return binary.LittleEndian.Uint64(buf)
 }
 
-// SendCmdBlocking works in blocking mode
+// SendCmdBlocking will block indefinetely
 func (mc *MsgConnection) SendCmdBlocking(cmd server.Cmd, cmdParam interface{}) ([]byte, error) {
+	return mc.SendCmdBlockingWithTimeout(cmd, cmdParam, simpl.ReadNoTimeout)
+}
+
+// SendCmdBlockingWithTimeout works in blocking mode
+func (mc *MsgConnection) SendCmdBlockingWithTimeout(cmd server.Cmd, cmdParam interface{}, seconds int) ([]byte, error) {
 	ID, err := mc.SendCmd(cmd, cmdParam)
 	if err != nil {
 		logger.Error("failed to send cmd", cmd, cmdParam, err)
@@ -94,7 +99,7 @@ func (mc *MsgConnection) SendCmdBlocking(cmd server.Cmd, cmdParam interface{}) (
 		return true
 	})
 
-	err = mc.Subscribe(cb)
+	err = mc.SubscribeWithTimeout(cb, seconds)
 
 	if err != nil {
 		logger.Error("Subscribe error", err)
@@ -107,7 +112,12 @@ func (mc *MsgConnection) SendCmdBlocking(cmd server.Cmd, cmdParam interface{}) (
 
 // Subscribe messages from the underlying connection
 func (mc *MsgConnection) Subscribe(cb *OnResponse) error {
-	r := simpl.NewStreamReader(mc.conn)
+	return mc.SubscribeWithTimeout(cb, simpl.ReadNoTimeout)
+}
+
+// SubscribeWithTimeout is Subscribe with timeout
+func (mc *MsgConnection) SubscribeWithTimeout(cb *OnResponse, seconds int) error {
+	r := simpl.NewStreamReaderWithTimeout(mc.conn, seconds)
 
 	for {
 		size, err := r.ReadUint32()
