@@ -102,7 +102,6 @@ type ConnectionCtx struct {
 	Internal  bool
 	GUID      string
 	AppID     int
-	Alias     string
 	WriteChan chan []byte
 	CloseChan chan bool // only close this channel
 }

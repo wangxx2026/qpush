@@ -76,10 +76,5 @@ func (cmd *LoginCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, erro
 		return server.ErrorCmd, nil, err
 	}
 
-	alias := result.Data.Alias
-	if alias != "" {
-		param.Ctx.Alias = alias
-	}
-
 	return server.LoginRespCmd, result.Data.MsgList, nil
 }

@@ -8,6 +8,7 @@ type Value struct {
 	GwHost    string
 	RedisAddr string
 	Servers   []string
+	RabbitMQ  string
 }
 
 var (

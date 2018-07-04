@@ -14,7 +14,6 @@ type PushCmd struct {
 	Unfold       string   `json:"unfold"`
 	AppID        int      `json:"app_id"`
 	GUID         []string `json:"guid"`
-	Alias        []string `json:"alias"`
 }
 
 // KillCmd is struct for kill
