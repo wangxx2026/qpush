@@ -15,7 +15,7 @@ import (
 
 const (
 	// ServerHeartBeatInteval is interval for server heartbeat
-	ServerHeartBeatInteval = time.Second * 3
+	ServerHeartBeatInteval = time.Second * 30
 	// DefaultPublicAddress is for public
 	DefaultPublicAddress = "localhost:8888"
 	// DefaultInternalAddress is for internal
