@@ -23,20 +23,10 @@ const (
 type LoginCmd struct {
 }
 
-// Msg is model for message
-type Msg struct {
-	MsgID        int    `json:"msg_id"`
-	Title        string `json:"title"`
-	Content      string `json:"content"`
-	Transmission string `json:"transmission"`
-	Unfold       string `json:"unfold"`
-	PassThrough  int    `json:"pass_through"`
-}
-
 // OfflineMsgData is data part
 type OfflineMsgData struct {
-	Alias   string `json:"alias"`
-	MsgList []Msg  `json:"msg_list"`
+	Alias   string       `json:"alias"`
+	MsgList []client.Msg `json:"msg_list"`
 }
 
 // OfflineMsg is model for offline message

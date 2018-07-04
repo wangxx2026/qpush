@@ -31,7 +31,7 @@ var pushCmd = &cobra.Command{
 			return
 		}
 
-		pushCmd := &client.PushCmd{MsgID: msgID, Title: title, Content: content}
+		pushCmd := &client.PushCmd{Msg: client.Msg{MsgID: msgID, Title: title, Content: content}}
 		bytes, err := conn.SendCmdBlocking(server.PushCmd, pushCmd)
 		if err != nil {
 			logger.Error("SendCmdBlocking failed:", err)

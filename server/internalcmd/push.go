@@ -7,7 +7,6 @@ import (
 	"qpush/client"
 	"qpush/modules/logger"
 	"qpush/server"
-	cmdpackage "qpush/server/cmd"
 	"qpush/server/impl"
 )
 
@@ -33,7 +32,7 @@ func (cmd *PushCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 		return server.ErrorCmd, nil, errUnMarshalFail
 	}
 
-	msg := cmdpackage.Msg{
+	msg := client.Msg{
 		MsgID: pushCmd.MsgID, Title: pushCmd.Title, Content: pushCmd.Content,
 		Transmission: pushCmd.Transmission, Unfold: pushCmd.Unfold, PassThrough: pushCmd.PassThrough}
 	bytes, err := json.Marshal(&msg)
