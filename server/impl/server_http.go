@@ -33,6 +33,10 @@ func (s *Server) startHTTPServer() *http.Server {
 			return
 		}
 
+		if r.URL.Path != "/" {
+			return
+		}
+
 		id := 1
 		title := "test title"
 		content := "test content"

@@ -37,7 +37,7 @@ func main() {
 			})
 			go func() {
 				for {
-					time.Sleep(time.Second * 20)
+					time.Sleep(time.Second * 10)
 					conn.SendCmd(server.HeartBeatCmd, nil)
 				}
 			}()
