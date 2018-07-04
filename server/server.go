@@ -90,11 +90,15 @@ type Handler interface {
 	Call(cmd Cmd, internal bool, param *CmdParam) (Cmd, interface{}, error)
 
 	RegisterCmd(cmd Cmd, internal bool, cmdHandler CmdHandler)
+
+	Walk(func(cmd Cmd, internal bool, cmdHandler CmdHandler) bool)
 }
 
 // CmdHandler is handler for cmd
 type CmdHandler interface {
 	Call(param *CmdParam) (Cmd, interface{}, error)
+
+	Status() interface{}
 }
 
 // ConnectionCtx is the context for connection
@@ -111,6 +115,7 @@ type Status struct {
 	GUIDCount       int
 	GUIDConnMapSize int
 	ConnCtxMapSize  int
+	HandleStatus    map[Cmd]interface{}
 	Uptime          time.Time
 }
 

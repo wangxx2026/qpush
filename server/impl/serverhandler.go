@@ -44,3 +44,21 @@ func (h *ServerHandler) RegisterCmd(cmd server.Cmd, internal bool, cmdHandler se
 		h.cmdHandlers.Store(cmd, cmdHandler)
 	}
 }
+
+// Walk iterates over each handler
+func (h *ServerHandler) Walk(f func(cmd server.Cmd, internal bool, cmdHandler server.CmdHandler) bool) {
+
+	var goon bool
+	h.cmdHandlers.Range(func(key, value interface{}) bool {
+		goon = f(key.(server.Cmd), false, value.(server.CmdHandler))
+		return goon
+	})
+	if !goon {
+		return
+	}
+
+	h.cmdHandlers.Range(func(key, value interface{}) bool {
+		goon = f(key.(server.Cmd), true, value.(server.CmdHandler))
+		return goon
+	})
+}

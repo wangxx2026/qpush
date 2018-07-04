@@ -78,3 +78,8 @@ func (cmd *LoginCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, erro
 
 	return server.LoginRespCmd, result.Data.MsgList, nil
 }
+
+// Status returns status of this cmd
+func (cmd *LoginCmd) Status() interface{} {
+	return nil
+}

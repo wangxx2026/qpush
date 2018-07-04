@@ -133,11 +133,12 @@ func (cmd *AckCmd) syncBatch(ackData map[string][]int) {
 		request.NotifyData = append(request.NotifyData, record)
 	}
 
-	for i := 0; i < 3; i++ {
+	for {
 		// send ack message
 		resp, err := http.DoAkSkRequest(http.PostMethod, "/v1/pushaksk/notifymsg", &request)
 		if err != nil {
 			logger.Error("error in DoAkSkRequest", err)
+			time.Sleep(time.Second)
 			continue
 		}
 
@@ -145,6 +146,7 @@ func (cmd *AckCmd) syncBatch(ackData map[string][]int) {
 		err = json.Unmarshal(resp, &result)
 		if err != nil {
 			logger.Error("error in DoAkSkRequest response", err)
+			time.Sleep(time.Second)
 			continue
 		}
 		if result.Code == 0 {
@@ -152,4 +154,18 @@ func (cmd *AckCmd) syncBatch(ackData map[string][]int) {
 		}
 	}
 
+}
+
+// Status returns status of this cmd
+func (cmd *AckCmd) Status() interface{} {
+	cmd.lock.Lock()
+
+	var count int
+	for _, idMap := range cmd.queuedAck {
+		count += len(idMap)
+	}
+
+	cmd.lock.Unlock()
+
+	return map[string]int{"queuedAck": count}
 }

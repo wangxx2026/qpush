@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"qpush/modules/logger"
 	"qpush/server"
+	"runtime/debug"
 	"sync"
 	"syscall"
 	"time"
@@ -135,7 +136,17 @@ func (s *Server) GetStatus() *server.Status {
 		ConnCtxMapSize  int
 	)
 
-	// for debug purpose
+	handlerStatus := make(map[server.Cmd]interface{})
+	s.handler.Walk(func(cmd server.Cmd, internal bool, cmdHandler server.CmdHandler) bool {
+
+		status := cmdHandler.Status()
+		if status != nil {
+			handlerStatus[cmd] = status
+		}
+
+		return true
+	})
+
 	s.guidConn.Range(func(k, v interface{}) bool {
 		GUIDConnMapSize++
 		return true
@@ -148,7 +159,8 @@ func (s *Server) GetStatus() *server.Status {
 	status := &server.Status{
 		Uptime: s.upTime, GUIDCount: guidCount,
 		GUIDConnMapSize: GUIDConnMapSize,
-		ConnCtxMapSize:  ConnCtxMapSize}
+		ConnCtxMapSize:  ConnCtxMapSize,
+		HandleStatus:    handlerStatus}
 
 	return status
 }
@@ -289,7 +301,7 @@ func (s *Server) handleConnection(conn net.Conn, internal bool) {
 
 	defer func() {
 		if err := recover(); err != nil {
-			logger.Error("recovered from panic in handleConnection", err)
+			logger.Error("recovered from panic in handleConnection", err, string(debug.Stack()))
 		}
 	}()
 	defer s.CloseConnection(conn)
