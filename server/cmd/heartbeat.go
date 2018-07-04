@@ -10,8 +10,3 @@ type HeartBeatCmd struct {
 func (cmd *HeartBeatCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error) {
 	return server.HeartBeatRespCmd, nil, nil
 }
-
-// Status returns status of this cmd
-func (cmd *HeartBeatCmd) Status() interface{} {
-	return nil
-}

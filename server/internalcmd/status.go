@@ -13,8 +13,3 @@ func (cmd *StatusCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, err
 	return server.StatusRespCmd, status, nil
 
 }
-
-// Status returns status of this cmd
-func (cmd *StatusCmd) Status() interface{} {
-	return nil
-}

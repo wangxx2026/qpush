@@ -139,7 +139,11 @@ func (s *Server) GetStatus() *server.Status {
 	handlerStatus := make(map[server.Cmd]interface{})
 	s.handler.Walk(func(cmd server.Cmd, internal bool, cmdHandler server.CmdHandler) bool {
 
-		status := cmdHandler.Status()
+		cmdStatus, ok := cmdHandler.(server.StatusAble)
+		if !ok {
+			return true
+		}
+		status := cmdStatus.Status()
 		if status != nil {
 			handlerStatus[cmd] = status
 		}

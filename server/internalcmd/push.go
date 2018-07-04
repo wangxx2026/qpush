@@ -67,8 +67,3 @@ func (cmd *PushCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 
 	return server.PushRespCmd, count, nil
 }
-
-// Status returns status of this cmd
-func (cmd *PushCmd) Status() interface{} {
-	return nil
-}

@@ -68,6 +68,10 @@ const (
 	KillAllCmd
 	// KillAllRespCmd is resp for KillAllCmd
 	KillAllRespCmd
+	// ListGUIDCmd is for list guid
+	ListGUIDCmd
+	// ListGUIDRespCmd is resp for ListGUIDCmd
+	ListGUIDRespCmd
 )
 
 // CmdParam wraps param for cmd
@@ -97,7 +101,10 @@ type Handler interface {
 // CmdHandler is handler for cmd
 type CmdHandler interface {
 	Call(param *CmdParam) (Cmd, interface{}, error)
+}
 
+// StatusAble is interface for status
+type StatusAble interface {
 	Status() interface{}
 }
 

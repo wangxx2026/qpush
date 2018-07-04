@@ -31,8 +31,3 @@ func (cmd *KillCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 	return server.KillRespCmd, true, err
 
 }
-
-// Status returns status of this cmd
-func (cmd *KillCmd) Status() interface{} {
-	return nil
-}
