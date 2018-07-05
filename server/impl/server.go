@@ -40,6 +40,14 @@ const (
 	DefaultWriteTimeout = 10
 )
 
+var (
+	closedChan = make(chan bool)
+)
+
+func init() {
+	close(closedChan)
+}
+
 // NewServer creates a server instance
 func NewServer(c *server.Config) *Server {
 	var (
@@ -108,16 +116,6 @@ func (s *Server) Walk(f func(net.Conn, *server.ConnectionCtx) bool) {
 	})
 }
 
-// GetCtx return the ctx for connection
-func (s *Server) GetCtx(conn net.Conn) *server.ConnectionCtx {
-	ctx, ok := s.connCtx.Load(conn)
-	if !ok {
-		return nil
-	}
-
-	return ctx.(*server.ConnectionCtx)
-}
-
 // GetStatus get the server status
 func (s *Server) GetStatus() *server.Status {
 
@@ -176,8 +174,10 @@ func (s *Server) BindAppGUIDToConn(appid int, guid string, conn net.Conn) {
 	oldConn, ok := s.guidConn.Load(appGUID)
 	if ok {
 		// TODO handle error
-		s.CloseConnection(oldConn.(net.Conn))
+		closeChan, _ := s.CloseConnection(oldConn.(net.Conn))
+		<-closeChan
 	}
+
 	s.guidConn.Store(appGUID, conn)
 }
 
@@ -219,7 +219,8 @@ func (s *Server) KillAppGUID(appID int, guid string) error {
 		return fmt.Errorf("no connection for guid:%s", appGUID)
 	}
 
-	return s.CloseConnection(conn.(net.Conn))
+	_, err := s.CloseConnection(conn.(net.Conn))
+	return err
 }
 
 // MakePacket generate packet
@@ -426,22 +427,29 @@ func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte, closeChan ch
 }
 
 // CloseConnection close specified connection
-func (s *Server) CloseConnection(conn net.Conn) error {
+// the return channel block until actually closed
+func (s *Server) CloseConnection(conn net.Conn) (<-chan bool, error) {
+
+	ctxInterface, ok := s.connCtx.Load(conn)
+	if !ok {
+		return closedChan, fmt.Errorf("conn already closed")
+	}
+	ctx := ctxInterface.(*server.ConnectionCtx)
 	err := conn.Close()
+
 	if err != nil {
 		logger.Error("failed to close connection", err)
-		return err
-	}
-	ctx, ok := s.connCtx.Load(conn)
-	if ok {
-		s.connCtx.Delete(conn)
-
-		close(ctx.(*server.ConnectionCtx).CloseChan)
-		if ctx.(*server.ConnectionCtx).GUID != "" {
-			s.guidConn.Delete(
-				getAppGUID(ctx.(*server.ConnectionCtx).AppID, ctx.(*server.ConnectionCtx).GUID))
-		}
+		return ctx.CloseChan, err
 	}
 
-	return nil
+	if ctx.GUID != "" {
+		s.guidConn.Delete(
+			getAppGUID(ctx.AppID, ctx.GUID))
+	}
+
+	// must keep this order, otherwise bug
+	s.connCtx.Delete(conn)
+	close(ctx.CloseChan)
+
+	return ctx.CloseChan, nil
 }

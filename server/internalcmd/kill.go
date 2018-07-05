@@ -28,6 +28,6 @@ func (cmd *KillCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 
 	err = param.Server.KillAppGUID(cmdInfo.AppID, cmdInfo.GUID)
 
-	return server.KillRespCmd, true, err
+	return server.KillRespCmd, err, nil
 
 }

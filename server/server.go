@@ -9,12 +9,11 @@ import (
 type Server interface {
 	ListenAndServe(address string, internalAddress string) error
 	Walk(f func(net.Conn, *ConnectionCtx) bool)
-	GetCtx(net.Conn) *ConnectionCtx
 	GetStatus() *Status
 	BindAppGUIDToConn(int, string, net.Conn)
 	SendTo(int, []string, []byte) int
 	KillAppGUID(appID int, guid string) error
-	CloseConnection(conn net.Conn) error
+	CloseConnection(conn net.Conn) (<-chan bool, error)
 }
 
 // Config is config for Server
