@@ -41,8 +41,9 @@ func (s *Server) startHTTPServer() *http.Server {
 		title := "test title"
 		content := "test content"
 
-		cmd := &client.PushCmd{Msg: client.Msg{MsgID: id, Title: title, Content: content}}
-		payload, _ := json.Marshal(cmd)
+		msg := client.Msg{
+			MsgID: id, Title: title, Content: content}
+		payload, _ := json.Marshal(msg)
 		packet := MakePacket(0, server.ForwardCmd, payload)
 
 		s.Walk(func(conn net.Conn, ctx *server.ConnectionCtx) bool {
