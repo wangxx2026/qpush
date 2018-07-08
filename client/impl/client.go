@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net"
 	"qpush/client"
 	"qpush/modules/logger"
@@ -67,10 +68,14 @@ func (mc *MsgConnection) SendCmd(cmd server.Cmd, cmdParam interface{}) (uint64, 
 }
 
 // PoorManUUID generate a uint64 uuid
-func PoorManUUID() uint64 {
+func PoorManUUID() (result uint64) {
 	buf := make([]byte, 8)
 	rand.Read(buf)
-	return binary.LittleEndian.Uint64(buf)
+	result = binary.LittleEndian.Uint64(buf)
+	if result == 0 {
+		result = math.MaxUint64
+	}
+	return
 }
 
 // SendCmdBlocking will block indefinetely
