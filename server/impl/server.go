@@ -10,6 +10,8 @@ import (
 	"qpush/modules/logger"
 	"qpush/modules/stream"
 	"qpush/server"
+	"qpush/server/impl/cmd"
+	"qpush/server/impl/internalcmd"
 	"runtime/debug"
 	"sync"
 	"syscall"
@@ -53,19 +55,27 @@ func init() {
 func NewServer(c *server.Config) *Server {
 	var (
 		readBufferSize int
-		handler        server.Handler
 	)
 	if c == nil {
 		readBufferSize = server.DefaultReadBufferSize
-		handler = &ServerHandler{}
 	} else {
 		readBufferSize = c.ReadBufferSize
-		handler = c.Handler
 	}
+
+	serverHandler := &ServerHandler{}
+	serverHandler.RegisterCmd(server.LoginCmd, false, &cmd.LoginCmd{})
+	serverHandler.RegisterCmd(server.AckCmd, false, cmd.NewAckCmd())
+	serverHandler.RegisterCmd(server.HeartBeatCmd, false, &cmd.HeartBeatCmd{})
+
+	serverHandler.RegisterCmd(server.PushCmd, true, &internalcmd.PushCmd{})
+	serverHandler.RegisterCmd(server.StatusCmd, true, &internalcmd.StatusCmd{})
+	serverHandler.RegisterCmd(server.KillCmd, true, &internalcmd.KillCmd{})
+	serverHandler.RegisterCmd(server.KillAllCmd, true, &internalcmd.KillAllCmd{})
+	serverHandler.RegisterCmd(server.ListGUIDCmd, true, &internalcmd.ListGUIDCmd{})
 
 	return &Server{
 		readBufferSize: readBufferSize,
-		handler:        handler,
+		handler:        serverHandler,
 		done:           make(chan bool),
 		upTime:         time.Now(),
 		hbConfig:       c.HBConfig}

@@ -5,9 +5,7 @@ import (
 	_ "net/http/pprof"
 	"qpush/modules/config"
 	"qpush/server"
-	"qpush/server/cmd"
 	"qpush/server/impl"
-	"qpush/server/internalcmd"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -48,17 +46,6 @@ func main() {
 				internalAddress = DefaultInternalAddress
 			}
 
-			serverHandler := &impl.ServerHandler{}
-			serverHandler.RegisterCmd(server.LoginCmd, false, &cmd.LoginCmd{})
-			serverHandler.RegisterCmd(server.AckCmd, false, cmd.NewAckCmd())
-			serverHandler.RegisterCmd(server.HeartBeatCmd, false, &cmd.HeartBeatCmd{})
-
-			serverHandler.RegisterCmd(server.PushCmd, true, &internalcmd.PushCmd{})
-			serverHandler.RegisterCmd(server.StatusCmd, true, &internalcmd.StatusCmd{})
-			serverHandler.RegisterCmd(server.KillCmd, true, &internalcmd.KillCmd{})
-			serverHandler.RegisterCmd(server.KillAllCmd, true, &internalcmd.KillAllCmd{})
-			serverHandler.RegisterCmd(server.ListGUIDCmd, true, &internalcmd.ListGUIDCmd{})
-
 			hbConfig := server.HeartBeatConfig{
 				Callback: func() error {
 					// logger.Info("heartbeat called")
@@ -68,7 +55,6 @@ func main() {
 				Interval: ServerHeartBeatInteval}
 			serverConfig := server.Config{
 				ReadBufferSize: server.DefaultReadBufferSize,
-				Handler:        serverHandler,
 				HBConfig:       hbConfig}
 
 			s := impl.NewServer(&serverConfig)
