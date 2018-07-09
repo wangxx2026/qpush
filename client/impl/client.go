@@ -9,8 +9,8 @@ import (
 	"net"
 	"qpush/client"
 	"qpush/modules/logger"
+	"qpush/modules/stream"
 	"qpush/server"
-	simpl "qpush/server/impl"
 )
 
 // Client is data structor for client
@@ -59,10 +59,10 @@ func (mc *MsgConnection) SendCmd(cmd server.Cmd, cmdParam interface{}) (uint64, 
 	}
 
 	requestID := PoorManUUID()
-	packet := simpl.MakePacket(requestID, cmd, jsonBytes)
+	packet := server.MakePacket(requestID, cmd, jsonBytes)
 
-	w := simpl.NewStreamWriter(mc.conn)
-	err = w.WriteBytes(packet)
+	w := stream.NewWriter(mc.conn)
+	err = w.Write(packet)
 
 	return requestID, err
 }
@@ -80,7 +80,7 @@ func PoorManUUID() (result uint64) {
 
 // SendCmdBlocking will block indefinetely
 func (mc *MsgConnection) SendCmdBlocking(cmd server.Cmd, cmdParam interface{}) ([]byte, error) {
-	return mc.SendCmdBlockingWithTimeout(cmd, cmdParam, simpl.ReadNoTimeout)
+	return mc.SendCmdBlockingWithTimeout(cmd, cmdParam, stream.ReadNoTimeout)
 }
 
 // SendCmdBlockingWithTimeout works in blocking mode
@@ -117,12 +117,12 @@ func (mc *MsgConnection) SendCmdBlockingWithTimeout(cmd server.Cmd, cmdParam int
 
 // Subscribe messages from the underlying connection
 func (mc *MsgConnection) Subscribe(cb *OnResponse) error {
-	return mc.SubscribeWithTimeout(cb, simpl.ReadNoTimeout)
+	return mc.SubscribeWithTimeout(cb, stream.ReadNoTimeout)
 }
 
 // SubscribeWithTimeout is Subscribe with timeout
 func (mc *MsgConnection) SubscribeWithTimeout(cb *OnResponse, seconds int) error {
-	r := simpl.NewStreamReaderWithTimeout(mc.conn, seconds)
+	r := stream.NewReaderWithTimeout(mc.conn, seconds)
 
 	for {
 		size, err := r.ReadUint32()

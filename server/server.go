@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/binary"
 	"net"
 	"time"
 )
@@ -129,3 +130,14 @@ const (
 	// DefaultReadBufferSize is default read buffer size
 	DefaultReadBufferSize = 10 * 1024 * 1024 // 10M
 )
+
+// MakePacket generate packet
+func MakePacket(requestID uint64, cmd Cmd, payload []byte) []byte {
+	length := 12 + uint32(len(payload))
+	buf := make([]byte, 4+length)
+	binary.BigEndian.PutUint32(buf, length)
+	binary.BigEndian.PutUint64(buf[4:], requestID)
+	binary.BigEndian.PutUint32(buf[12:], uint32(cmd))
+	copy(buf[16:], payload)
+	return buf
+}

@@ -44,7 +44,7 @@ func (s *Server) startHTTPServer() *http.Server {
 		msg := client.Msg{
 			MsgID: id, Title: title, Content: content}
 		payload, _ := json.Marshal(msg)
-		packet := MakePacket(0, server.ForwardCmd, payload)
+		packet := server.MakePacket(0, server.ForwardCmd, payload)
 
 		s.Walk(func(conn net.Conn, ctx *server.ConnectionCtx) bool {
 

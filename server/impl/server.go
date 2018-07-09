@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"qpush/modules/logger"
+	"qpush/modules/stream"
 	"qpush/server"
 	"runtime/debug"
 	"sync"
@@ -223,17 +224,6 @@ func (s *Server) KillAppGUID(appID int, guid string) error {
 	return err
 }
 
-// MakePacket generate packet
-func MakePacket(requestID uint64, cmd server.Cmd, payload []byte) []byte {
-	length := 12 + uint32(len(payload))
-	buf := make([]byte, 4+length)
-	binary.BigEndian.PutUint32(buf, length)
-	binary.BigEndian.PutUint64(buf[4:], requestID)
-	binary.BigEndian.PutUint32(buf[12:], uint32(cmd))
-	copy(buf[16:], payload)
-	return buf
-}
-
 func (s *Server) handleSignal(quitChan chan os.Signal) {
 	<-quitChan
 	logger.Debug("signal captured")
@@ -324,7 +314,7 @@ func (s *Server) handleConnection(conn net.Conn, internal bool) {
 	} else {
 		readTimeout = DefaultReadTimeout
 	}
-	r := NewStreamReaderWithTimeout(conn, readTimeout)
+	r := stream.NewReaderWithTimeout(conn, readTimeout)
 
 	s.goFunc(func() {
 		s.handleWrite(conn, ctx.WriteChan, ctx.CloseChan)
@@ -393,7 +383,7 @@ func (s *Server) handleConnection(conn net.Conn, internal bool) {
 		}
 
 		logger.Debug("requestID", requestID, "responseCmd", responseCmd, "jsonResponse", string(jsonResponse))
-		packet := MakePacket(requestID, responseCmd, jsonResponse)
+		packet := server.MakePacket(requestID, responseCmd, jsonResponse)
 		logger.Debug("packet is", packet)
 		ctx.WriteChan <- packet
 
@@ -402,7 +392,7 @@ func (s *Server) handleConnection(conn net.Conn, internal bool) {
 }
 
 func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte, closeChan chan bool) {
-	w := NewStreamWriterWithTimeout(conn, DefaultWriteTimeout)
+	w := stream.NewWriterWithTimeout(conn, DefaultWriteTimeout)
 	for {
 		select {
 		case <-s.done:
@@ -417,7 +407,7 @@ func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte, closeChan ch
 			}
 
 			// logger.Debug("WriteBytes called", bytes)
-			err := w.WriteBytes(bytes)
+			err := w.Write(bytes)
 			if err != nil {
 				s.CloseConnection(conn)
 				return

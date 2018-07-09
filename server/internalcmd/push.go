@@ -7,7 +7,6 @@ import (
 	"qpush/client"
 	"qpush/modules/logger"
 	"qpush/server"
-	"qpush/server/impl"
 )
 
 var (
@@ -40,7 +39,7 @@ func (cmd *PushCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 		logger.Error("failed to marshal")
 		return server.ErrorCmd, false, errMarshalFail
 	}
-	packet := impl.MakePacket(param.RequestID, server.ForwardCmd, bytes)
+	packet := server.MakePacket(param.RequestID, server.ForwardCmd, bytes)
 
 	// single mode
 	if pushCmd.AppID != 0 && len(pushCmd.GUID) > 0 {

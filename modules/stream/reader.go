@@ -1,4 +1,4 @@
-package impl
+package stream
 
 import (
 	"encoding/binary"
@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// StreamReader read data from socket
-type StreamReader struct {
+// Reader read data from socket
+type Reader struct {
 	conn    net.Conn
 	timeout int
 }
@@ -18,23 +18,23 @@ const (
 	ReadNoTimeout = -1
 )
 
-// NewStreamReader creates a StreamReader instance
-func NewStreamReader(conn net.Conn) *StreamReader {
-	return &StreamReader{conn: conn, timeout: ReadNoTimeout}
+// NewReader creates a StreamReader instance
+func NewReader(conn net.Conn) *Reader {
+	return &Reader{conn: conn, timeout: ReadNoTimeout}
 }
 
-// NewStreamReaderWithTimeout allows specify timeout
-func NewStreamReaderWithTimeout(conn net.Conn, timeout int) *StreamReader {
-	return &StreamReader{conn: conn, timeout: timeout}
+// NewReaderWithTimeout allows specify timeout
+func NewReaderWithTimeout(conn net.Conn, timeout int) *Reader {
+	return &Reader{conn: conn, timeout: timeout}
 }
 
 // SetReadTimeout allows specify timeout for read
-func (r *StreamReader) SetReadTimeout(timeout int) {
+func (r *Reader) SetReadTimeout(timeout int) {
 	r.timeout = timeout
 }
 
 // ReadUint32 read uint32 from socket
-func (r *StreamReader) ReadUint32() (uint32, error) {
+func (r *Reader) ReadUint32() (uint32, error) {
 	bytes := make([]byte, 4)
 	if r.timeout > 0 {
 		r.conn.SetReadDeadline(time.Now().Add(time.Duration(r.timeout) * time.Second))
@@ -48,7 +48,7 @@ func (r *StreamReader) ReadUint32() (uint32, error) {
 }
 
 // ReadBytes read bytes
-func (r *StreamReader) ReadBytes(bytes []byte) error {
+func (r *Reader) ReadBytes(bytes []byte) error {
 	if r.timeout > 0 {
 		r.conn.SetReadDeadline(time.Now().Add(time.Duration(r.timeout) * time.Second))
 	}
