@@ -40,7 +40,7 @@ const (
 	// DefaultInternalReadTimeout is read timeout for internal connections
 	DefaultInternalReadTimeout = 10 * 60
 	// DefaultWriteTimeout is default timeout for write in seconds
-	DefaultWriteTimeout = 10
+	DefaultWriteTimeout = 60
 )
 
 var (
