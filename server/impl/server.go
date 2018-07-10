@@ -296,9 +296,7 @@ func (s *Server) listenAndServe(address string, internal bool) {
 			continue
 		}
 
-		s.goFunc(func() {
-			s.handleConnection(conn, internal)
-		})
+		go s.handleConnection(conn, internal)
 	}
 }
 
@@ -326,9 +324,7 @@ func (s *Server) handleConnection(conn net.Conn, internal bool) {
 	}
 	r := stream.NewReaderWithTimeout(conn, readTimeout)
 
-	s.goFunc(func() {
-		s.handleWrite(conn, ctx.WriteChan, ctx.CloseChan)
-	})
+	go s.handleWrite(conn, ctx.WriteChan, ctx.CloseChan)
 
 	for {
 		select {

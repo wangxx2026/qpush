@@ -14,14 +14,12 @@ const (
 
 // Info prints to stdout
 func Info(msg ...interface{}) {
-	fmt.Print(time.Now().String(), SEP)
-	fmt.Println(msg...)
+	fmt.Fprint(os.Stdout, time.Now().String(), SEP, fmt.Sprintln(msg...))
 }
 
 // Error prints to stderr
 func Error(msg ...interface{}) {
-	fmt.Fprint(os.Stderr, time.Now().String(), SEP)
-	fmt.Fprintln(os.Stderr, msg...)
+	fmt.Fprint(os.Stderr, time.Now().String(), SEP, fmt.Sprintln(msg...))
 }
 
 // Debug prints to stderr
@@ -33,6 +31,5 @@ func Debug(msg ...interface{}) {
 		return
 	}
 
-	fmt.Fprint(os.Stderr, time.Now().String(), SEP)
-	fmt.Fprintln(os.Stderr, msg...)
+	fmt.Fprint(os.Stderr, time.Now().String(), SEP, fmt.Sprintln(msg...))
 }
