@@ -100,6 +100,12 @@ type CmdParam struct {
 	RequestID uint64
 }
 
+// CmdCall for call cmd
+type CmdCall struct {
+	Cmd   Cmd
+	Param *CmdParam
+}
+
 // StreamReader is interface to stream reader
 type StreamReader interface {
 	SetReadTimeout(timeout int)

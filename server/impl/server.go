@@ -312,7 +312,8 @@ func (s *Server) handleConnection(conn net.Conn, internal bool) {
 
 	// store pointer
 	ctx := &server.ConnectionCtx{
-		Internal: internal, WriteChan: make(chan []byte, 30),
+		Internal:  internal,
+		WriteChan: make(chan []byte, 30),
 		CloseChan: make(chan bool)}
 	// for query from other G
 	s.connCtx.Store(conn, ctx)
@@ -325,7 +326,12 @@ func (s *Server) handleConnection(conn net.Conn, internal bool) {
 	}
 	r := stream.NewReaderWithTimeout(conn, readTimeout)
 
-	go s.handleWrite(conn, ctx.WriteChan, ctx.CloseChan)
+	go s.handleWrite(conn, ctx)
+	var cmdChan chan *server.CmdCall // only used by agent
+	if internal {
+		cmdChan = make(chan *server.CmdCall, 1)
+		go s.handleCmdCall(conn, ctx, cmdChan)
+	}
 
 	for {
 		select {
@@ -371,47 +377,35 @@ func (s *Server) handleConnection(conn net.Conn, internal bool) {
 			Ctx:       ctx,
 			Reader:    r}
 
-		logger.Debug("cmdParam is", string(payload[12:]))
-		responseCmd, response, err := s.handler.Call(cmd, internal, &params)
-		if err != nil {
-			logger.Error("handler.Call return error:", err)
-			return
-		}
+		cmdCall := server.CmdCall{Cmd: cmd, Param: &params}
 
-		var (
-			jsonResponse []byte
-		)
-		if response != nil {
-			jsonResponse, err = json.Marshal(response)
-			if err != nil {
-				logger.Error("json.Marshal fail:%s", err)
+		if internal {
+			select {
+			case <-s.done:
+				return
+			case <-ctx.CloseChan:
+				return
+			case cmdChan <- &cmdCall:
+			}
+		} else {
+			if s.handleOneCmdCall(&cmdCall) != nil {
 				return
 			}
-		}
-
-		logger.Debug("requestID", requestID, "responseCmd", responseCmd, "jsonResponse", string(jsonResponse))
-		packet := server.MakePacket(requestID, responseCmd, jsonResponse)
-		logger.Debug("packet is", packet)
-		// try write until socket closed
-		select {
-		case ctx.WriteChan <- packet:
-		case <-ctx.CloseChan:
-			return
 		}
 
 	}
 
 }
 
-func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte, closeChan chan bool) {
+func (s *Server) handleWrite(conn net.Conn, ctx *server.ConnectionCtx) {
 	w := stream.NewWriterWithTimeout(conn, DefaultWriteTimeout)
 	for {
 		select {
 		case <-s.done:
 			return
-		case <-closeChan:
+		case <-ctx.CloseChan:
 			return
-		case bytes := <-writeChann:
+		case bytes := <-ctx.WriteChan:
 
 			// logger.Debug("writeChann fired")
 			if bytes == nil {
@@ -426,6 +420,58 @@ func (s *Server) handleWrite(conn net.Conn, writeChann chan []byte, closeChan ch
 			}
 		}
 	}
+}
+
+func (s *Server) handleCmdCall(conn net.Conn, ctx *server.ConnectionCtx, cmdChan chan *server.CmdCall) {
+
+myloop:
+	for {
+		select {
+		case <-ctx.CloseChan:
+			return
+		case <-s.done:
+			return
+		case cmdCall := <-cmdChan:
+			if s.handleOneCmdCall(cmdCall) != nil {
+				break myloop
+			}
+		}
+	}
+
+	// close if error
+	s.CloseConnection(conn)
+}
+
+func (s *Server) handleOneCmdCall(cmdCall *server.CmdCall) error {
+	logger.Debug("cmdParam is", string(cmdCall.Param.Param))
+	responseCmd, response, err := s.handler.Call(cmdCall.Cmd, cmdCall.Param.Ctx.Internal, cmdCall.Param)
+	if err != nil {
+		logger.Error("handler.Call return error:", err)
+		return err
+	}
+
+	var (
+		jsonResponse []byte
+	)
+	if response != nil {
+		jsonResponse, err = json.Marshal(response)
+		if err != nil {
+			logger.Error("json.Marshal fail:%s", err)
+			return err
+		}
+	}
+
+	logger.Debug("requestID", cmdCall.Param.RequestID, "responseCmd", responseCmd, "jsonResponse", string(jsonResponse))
+	packet := server.MakePacket(cmdCall.Param.RequestID, responseCmd, jsonResponse)
+	logger.Debug("packet is", packet)
+	// try write until socket closed or server closed
+	select {
+	case <-cmdCall.Param.Ctx.CloseChan:
+	case <-s.done:
+	case cmdCall.Param.Ctx.WriteChan <- packet:
+	}
+
+	return nil
 }
 
 // CloseConnection close specified connection
