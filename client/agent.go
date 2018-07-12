@@ -27,3 +27,13 @@ type KillCmd struct {
 	GUID  string `json:"guid"`
 	AppID int    `json:"app_id"`
 }
+
+// ExecCmd is struct for exec
+type ExecCmd struct {
+	Cmd string
+}
+
+// ExecRespCmd is struct for execresp
+type ExecRespCmd struct {
+	Err string
+}

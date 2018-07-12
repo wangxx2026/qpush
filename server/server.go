@@ -2,8 +2,20 @@ package server
 
 import (
 	"encoding/binary"
+	"errors"
 	"net"
 	"time"
+)
+
+var (
+	// ErrMarshalFail for marshal fail
+	ErrMarshalFail = errors.New("failed to marshal")
+	// ErrUnMarshalFail for unmarshal fail
+	ErrUnMarshalFail = errors.New("failed to unmarshal")
+	// ErrInvalidParam when param not valid
+	ErrInvalidParam = errors.New("invalid param")
+	// ErrConnectionClosed for connection closed
+	ErrConnectionClosed = errors.New("connection closed")
 )
 
 // Server is interface for server
@@ -72,6 +84,10 @@ const (
 	ListGUIDCmd
 	// ListGUIDRespCmd is resp for ListGUIDCmd
 	ListGUIDRespCmd
+	// ExecCmd for exec
+	ExecCmd
+	// ExecRespCmd is resp for ExecCmd
+	ExecRespCmd
 )
 
 // CmdParam wraps param for cmd

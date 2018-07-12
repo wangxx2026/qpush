@@ -38,7 +38,7 @@ const (
 	// DefaultReadTimeout is the default read timeout duration in seconds
 	DefaultReadTimeout = 10
 	// DefaultInternalReadTimeout is read timeout for internal connections
-	DefaultInternalReadTimeout = 10 * 60
+	DefaultInternalReadTimeout = stream.ReadNoTimeout
 	// DefaultWriteTimeout is default timeout for write in seconds
 	DefaultWriteTimeout = 60
 )
@@ -72,6 +72,7 @@ func NewServer(c *server.Config) *Server {
 	serverHandler.RegisterCmd(server.KillCmd, true, &internalcmd.KillCmd{})
 	serverHandler.RegisterCmd(server.KillAllCmd, true, &internalcmd.KillAllCmd{})
 	serverHandler.RegisterCmd(server.ListGUIDCmd, true, &internalcmd.ListGUIDCmd{})
+	serverHandler.RegisterCmd(server.ExecCmd, true, &internalcmd.ExecCmd{})
 
 	return &Server{
 		readBufferSize: readBufferSize,
@@ -391,7 +392,12 @@ func (s *Server) handleConnection(conn net.Conn, internal bool) {
 		logger.Debug("requestID", requestID, "responseCmd", responseCmd, "jsonResponse", string(jsonResponse))
 		packet := server.MakePacket(requestID, responseCmd, jsonResponse)
 		logger.Debug("packet is", packet)
-		ctx.WriteChan <- packet
+		// try write until socket closed
+		select {
+		case ctx.WriteChan <- packet:
+		case <-ctx.CloseChan:
+			return
+		}
 
 	}
 

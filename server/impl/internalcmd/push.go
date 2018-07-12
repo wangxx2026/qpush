@@ -2,16 +2,10 @@ package internalcmd
 
 import (
 	"encoding/json"
-	"errors"
 	"net"
 	"qpush/client"
 	"qpush/modules/logger"
 	"qpush/server"
-)
-
-var (
-	errMarshalFail   = errors.New("failed to marshal")
-	errUnMarshalFail = errors.New("failed to unmarshal")
 )
 
 // PushCmd do push
@@ -28,7 +22,7 @@ func (cmd *PushCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 	err := json.Unmarshal(message, &pushCmd)
 	if err != nil {
 		logger.Error("failed to unmarshal")
-		return server.ErrorCmd, nil, errUnMarshalFail
+		return server.ErrorCmd, nil, server.ErrUnMarshalFail
 	}
 
 	msg := client.Msg{
@@ -37,7 +31,7 @@ func (cmd *PushCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 	bytes, err := json.Marshal(&msg)
 	if err != nil {
 		logger.Error("failed to marshal")
-		return server.ErrorCmd, false, errMarshalFail
+		return server.ErrorCmd, false, server.ErrMarshalFail
 	}
 	packet := server.MakePacket(param.RequestID, server.ForwardCmd, bytes)
 
