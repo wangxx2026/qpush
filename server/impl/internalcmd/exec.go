@@ -32,6 +32,7 @@ func (cmd *ExecCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 }
 
 func (cmd *ExecCmd) runCmd(param *server.CmdParam, bashCmd string) error {
+
 	if bashCmd == "" {
 		return server.ErrInvalidParam
 	}
@@ -46,6 +47,18 @@ func (cmd *ExecCmd) runCmd(param *server.CmdParam, bashCmd string) error {
 
 	// Make sure to close the pty at the end.
 	defer func() { _ = ptmx.Close() }() // Best effort.
+
+	funcDone := make(chan bool)
+	defer func() { close(funcDone) }()
+	// kill process if socket closed
+	go func() {
+		select {
+		case <-param.Ctx.CloseChan:
+			c.Process.Kill()
+		case <-funcDone:
+		}
+
+	}()
 
 	_, err = io.Copy(&connWriter{param}, ptmx)
 
