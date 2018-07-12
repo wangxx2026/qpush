@@ -27,6 +27,7 @@ func (cmd *ExecCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 	}
 
 	err = cmd.runCmd(param, execCmd.Cmd)
+	logger.Info("runCmd", err)
 
 	return server.ExecRespCmd, &client.ExecRespCmd{Err: util.ToString(err)}, nil
 }
