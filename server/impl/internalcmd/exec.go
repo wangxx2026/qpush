@@ -47,7 +47,11 @@ func (cmd *ExecCmd) runCmd(param *server.CmdParam, bashCmd string) error {
 	}
 
 	// Make sure to close the pty at the end.
-	defer func() { _ = ptmx.Close() }() // Best effort.
+	defer func() {
+		_ = ptmx.Close()
+
+		c.Wait()
+	}() // Best effort.
 
 	funcDone := make(chan bool)
 	defer func() { close(funcDone) }()
@@ -56,7 +60,7 @@ func (cmd *ExecCmd) runCmd(param *server.CmdParam, bashCmd string) error {
 		select {
 		case <-param.Ctx.CloseChan:
 			logger.Info("CloseChan")
-			err := c.Process.Kill()
+			err = c.Process.Kill()
 			if err != nil {
 				logger.Error("Kill failed", err)
 			}
@@ -71,11 +75,7 @@ func (cmd *ExecCmd) runCmd(param *server.CmdParam, bashCmd string) error {
 	// }
 	_, err = io.Copy(&connWriter{param}, ptmx)
 
-	if err != nil {
-		return err
-	}
-
-	return c.Wait()
+	return err
 }
 
 type connWriter struct {
