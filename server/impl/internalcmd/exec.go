@@ -3,7 +3,6 @@ package internalcmd
 import (
 	"encoding/json"
 	"io"
-	"os"
 	"os/exec"
 	"qpush/client"
 	"qpush/modules/logger"
@@ -61,10 +60,10 @@ func (cmd *ExecCmd) runCmd(param *server.CmdParam, bashCmd string) error {
 
 	}()
 
-	if err := pty.InheritSize(os.Stdin, ptmx); err != nil {
-		logger.Error("InheritSize fail", err)
-		return err
-	}
+	// if err := pty.InheritSize(os.Stdin, ptmx); err != nil {
+	// 	logger.Error("InheritSize fail", err)
+	// 	return err
+	// }
 	_, err = io.Copy(&connWriter{param}, ptmx)
 
 	if err != nil {
