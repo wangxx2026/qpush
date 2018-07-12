@@ -54,7 +54,10 @@ func (cmd *ExecCmd) runCmd(param *server.CmdParam, bashCmd string) error {
 	go func() {
 		select {
 		case <-param.Ctx.CloseChan:
-			c.Process.Kill()
+			err := c.Process.Kill()
+			if err != nil {
+				logger.Error("Kill failed", err)
+			}
 		case <-funcDone:
 		}
 
