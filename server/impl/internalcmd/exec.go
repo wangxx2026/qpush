@@ -32,7 +32,7 @@ func (cmd *ExecCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error
 	return server.ExecRespCmd, &client.ExecRespCmd{Err: util.ToString(err)}, nil
 }
 
-func (cmd *ExecCmd) runCmd(param *server.CmdParam, bashCmd string) error {
+func (cmd *ExecCmd) runCmd(param *server.CmdParam, bashCmd string) (errResp error) {
 
 	if bashCmd == "" {
 		return server.ErrInvalidParam
@@ -50,7 +50,7 @@ func (cmd *ExecCmd) runCmd(param *server.CmdParam, bashCmd string) error {
 	defer func() {
 		_ = ptmx.Close()
 
-		c.Wait()
+		errResp = c.Wait()
 	}() // Best effort.
 
 	funcDone := make(chan bool)
@@ -75,7 +75,7 @@ func (cmd *ExecCmd) runCmd(param *server.CmdParam, bashCmd string) error {
 	// }
 	_, err = io.Copy(&connWriter{param}, ptmx)
 
-	return err
+	return
 }
 
 type connWriter struct {
