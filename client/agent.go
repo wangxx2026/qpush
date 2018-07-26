@@ -7,7 +7,7 @@ type Agent interface {
 
 // Msg is model for message
 type Msg struct {
-	MsgID        int    `json:"msg_id"`
+	MsgID        string `json:"msg_id"`
 	Title        string `json:"title"`
 	Content      string `json:"content"`
 	Transmission string `json:"transmission"`

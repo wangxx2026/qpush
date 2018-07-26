@@ -14,7 +14,7 @@ import (
 
 // NewAckCmd creates an AckCmd instance
 func NewAckCmd() *AckCmd {
-	cmd := &AckCmd{queuedAck: make(map[string]map[int]bool), batchSignal: make(chan bool, 1)}
+	cmd := &AckCmd{queuedAck: make(map[string]map[string]bool), batchSignal: make(chan bool, 1)}
 	go cmd.syncAck()
 	return cmd
 }
@@ -23,7 +23,7 @@ func NewAckCmd() *AckCmd {
 type AckCmd struct {
 	lock        sync.Mutex
 	batchSignal chan bool
-	queuedAck   map[string]map[int]bool
+	queuedAck   map[string]map[string]bool
 }
 
 const (
@@ -59,7 +59,7 @@ func (cmd *AckCmd) Call(param *server.CmdParam) (server.Cmd, interface{}, error)
 
 	_, ok := cmd.queuedAck[appGUID]
 	if !ok {
-		cmd.queuedAck[appGUID] = make(map[int]bool)
+		cmd.queuedAck[appGUID] = make(map[string]bool)
 	}
 	for _, id := range ackCmd.MsgIDS {
 		cmd.queuedAck[appGUID][id] = true
@@ -86,12 +86,12 @@ func (cmd *AckCmd) syncAck() {
 		cmd.lock.Lock()
 		// fast copy and unlock
 		queuedAck := cmd.queuedAck
-		cmd.queuedAck = make(map[string]map[int]bool)
+		cmd.queuedAck = make(map[string]map[string]bool)
 		cmd.lock.Unlock()
 
-		ackData := make(map[string][]int)
+		ackData := make(map[string][]string)
 		for appGUID, idMap := range queuedAck {
-			ids := make([]int, 0, len(idMap))
+			ids := make([]string, 0, len(idMap))
 			for id := range idMap {
 				ids = append(ids, id)
 			}
@@ -100,7 +100,7 @@ func (cmd *AckCmd) syncAck() {
 
 			if len(ackData) > BatchAckNumber || len(ids) > BatchAckNumber {
 				cmd.syncBatch(ackData)
-				ackData = make(map[string][]int)
+				ackData = make(map[string][]string)
 			}
 		}
 
@@ -118,15 +118,15 @@ type ackRequest struct {
 	NotifyData []ackRecord `json:"notify_data"`
 }
 type ackRecord struct {
-	MsgIDS []int  `json:"msg_ids"`
-	GUID   string `json:"guid"`
+	MsgIDS []string `json:"msg_ids"`
+	GUID   string   `json:"guid"`
 }
 type ackResponse struct {
 	Code int    `json:"code"`
 	MSG  string `json:"msg"`
 }
 
-func (cmd *AckCmd) syncBatch(ackData map[string][]int) {
+func (cmd *AckCmd) syncBatch(ackData map[string][]string) {
 	request := ackRequest{NotifyData: make([]ackRecord, 0, len(ackData))}
 	for appGUID, ids := range ackData {
 		record := ackRecord{MsgIDS: ids, GUID: appGUID}

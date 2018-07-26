@@ -37,7 +37,7 @@ func (s *Server) startHTTPServer() *http.Server {
 			return
 		}
 
-		id := 1
+		id := "1"
 		title := "test title"
 		content := "test content"
 
