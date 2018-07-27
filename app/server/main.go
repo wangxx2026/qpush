@@ -1,13 +1,17 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	_ "net/http/pprof"
+	"qpush/client"
 	"qpush/modules/config"
 	"qpush/server"
 	"qpush/server/cmd"
 	"qpush/server/internalcmd"
+	"runtime"
 	"time"
 
 	"github.com/zhiqiangxu/qrpc"
@@ -63,12 +67,42 @@ func main() {
 				qrpc.ServerBinding{Addr: publicAddr, Handler: handler},
 				qrpc.ServerBinding{Addr: internalAddr, Handler: internalHandler}}
 
+			qserver := qrpc.NewServer(bindings)
+
 			go func() {
 				srv := &http.Server{Addr: "0.0.0.0:8080"}
+				http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+
+					if config.Get().Env == config.ProdEnv {
+						return
+					}
+
+					if r.URL.Path != "/" {
+						return
+					}
+
+					id := "1"
+					title := "test title"
+					content := "test content"
+
+					msg := client.Msg{
+						MsgID: id, Title: title, Content: content}
+					payload, _ := json.Marshal(msg)
+					pushID := qserver.GetPushID()
+
+					qserver.WalkConn(0, func(w qrpc.FrameWriter, ci *qrpc.ConnectionInfo) bool {
+						w.StartWrite(pushID, server.ForwardCmd, qrpc.PushFlag)
+						w.WriteBytes(payload)
+						w.EndWrite()
+						return true
+					})
+
+					runtime.GC()
+					io.WriteString(w, "ok\n")
+				})
 				fmt.Println(srv.ListenAndServe())
 			}()
-			server := qrpc.NewServer(bindings)
-			err := server.ListenAndServe()
+			err := qserver.ListenAndServe()
 			if err != nil {
 				fmt.Println("ListenAndServe", err)
 			}
