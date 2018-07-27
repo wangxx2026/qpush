@@ -5,7 +5,6 @@ import (
 	"qpush/client/impl"
 	"qpush/modules/logger"
 	"qpush/server"
-	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -16,11 +15,7 @@ var pushCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(4),
 	Run: func(cmd *cobra.Command, args []string) {
 		internalAddress := args[0]
-		msgID, err := strconv.Atoi(args[1])
-		if err != nil {
-			logger.Error("Atoi failed:", err)
-			return
-		}
+		msgID := args[1]
 		title := args[2]
 		content := args[3]
 
