@@ -2,7 +2,6 @@ package internalcmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"qpush/client"
 	"qpush/modules/logger"
 	"qpush/server"
@@ -70,7 +69,7 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 	}
 
 	qserver.WalkConn(0, func(writer qrpc.FrameWriter, ci *qrpc.ConnectionInfo) bool {
-		fmt.Printf("%v:%s\n", *ci, ci.SC.GetID())
+		logger.Debug(*ci, ci.SC.GetID())
 		qrpc.GoFunc(&wg, func() {
 			writer.StartWrite(pushID, server.ForwardCmd, qrpc.PushFlag)
 			writer.WriteBytes(bytes)

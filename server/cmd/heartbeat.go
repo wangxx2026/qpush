@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"qpush/modules/logger"
 	"qpush/server"
 
@@ -18,7 +17,7 @@ func (cmd *HeartBeatCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestF
 	writer.StartWrite(frame.RequestID, server.HeartBeatRespCmd, 0)
 	err := writer.EndWrite()
 	if err != nil {
-		fmt.Println("HeartBeatCmd", err)
+		logger.Error("HeartBeatCmd", err)
 	}
 
 }

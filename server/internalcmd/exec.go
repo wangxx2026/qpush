@@ -3,7 +3,6 @@ package internalcmd
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os/exec"
 	"qpush/client"
@@ -111,7 +110,7 @@ func (cmd *ExecCmd) runCmd(writer qrpc.FrameWriter, frame *qrpc.RequestFrame, ba
 						continue
 					}
 				case InputCmd:
-					fmt.Printf("%s", nextFrame.Payload)
+					logger.Debug("%s", nextFrame.Payload)
 					ptmx.Write(nextFrame.Payload)
 				}
 			case <-funcDone:
