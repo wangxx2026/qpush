@@ -5,6 +5,8 @@ import (
 	"os"
 	"qpush/modules/config"
 	"time"
+
+	"github.com/zhiqiangxu/qrpc"
 )
 
 const (
@@ -32,4 +34,20 @@ func Debug(msg ...interface{}) {
 	}
 
 	fmt.Fprint(os.Stderr, time.Now().String(), SEP, fmt.Sprintln(msg...))
+}
+
+type log struct {
+}
+
+func (l log) Info(msg ...interface{}) {
+	Info(msg...)
+}
+func (l log) Error(msg ...interface{}) {
+	Info(msg...)
+}
+func (l log) Debug(msg ...interface{}) {
+	Info(msg...)
+}
+func init() {
+	qrpc.Logger = log{}
 }
