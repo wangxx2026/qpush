@@ -1,26 +1,26 @@
-package agentcmd
+package cmd
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"qpush/client"
-	cimpl "qpush/client/impl"
 	"qpush/modules/config"
 	"qpush/modules/logger"
 	"qpush/modules/rabbitmq"
 	"qpush/server"
-	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/streadway/amqp"
+	"github.com/zhiqiangxu/qrpc"
 )
 
 // this file implements scheduled push service
 
 var (
-	env  string
-	conf *config.Value
+	env             string
+	conf            *config.Value
+	msgCh           = make(chan *amqp.Delivery)
+	ctx, cancelFunc = context.WithCancel(context.Background())
 )
 
 const (
@@ -34,22 +34,29 @@ var queuePushCmd = &cobra.Command{
 	Short: "get messages to send and push to server",
 	Run: func(cmd *cobra.Command, args []string) {
 
+		defer cancelFunc()
+
 		initConfig()
 
 		msgs := getMsgs()
+		go handleMsg()
 
 		for {
 			select {
 			case msg, ok := <-msgs:
 
 				if !ok {
-					panic("quit for channel close")
+					fmt.Println("quit for channel close")
+					return
 				}
 
-				go handleMsg(&msg)
+				msgCh <- &msg
 
+			case <-ctx.Done():
+				return
 			case <-time.After(time.Second * 5):
-				panic("quit for idle")
+				fmt.Println("quit for idle")
+				return
 			}
 
 		}
@@ -61,55 +68,41 @@ func getMsgs() <-chan amqp.Delivery {
 
 }
 
-func handleMsg(d *amqp.Delivery) {
+func handleMsg() {
 
-	logger.Debug(string(d.Body))
+	defer cancelFunc()
 
-	defer func() {
-		if err := recover(); err != nil {
-			logger.Error("recovered from panic in handleMsg", err)
-		}
-	}()
-
-	cmd := client.PushCmd{}
-	err := json.Unmarshal(d.Body, &cmd)
-	if err != nil {
-		logger.Error("invalid message", err)
-		return
-	}
-	logger.Debug(cmd)
-
-	var routinesGroup sync.WaitGroup
-	agent := cimpl.NewAgent()
+	conns := make(map[string]*qrpc.Connection)
 	for _, serverAddr := range conf.Servers {
-		s := serverAddr
-		routinesGroup.Add(1)
-		go func() {
-			conn := agent.Dial(s)
-			if conn == nil {
-				logger.Error("failed to dial")
-				panic("failed to dial")
-			}
-
-			_, err := conn.SendCmdBlockingWithTimeout(server.PushCmd, &cmd, pushTimeout)
-			if err != nil {
-				logger.Error("SendCmdBlocking failed:", err)
-				panic("SendCmdBlocking failed")
-			}
-			routinesGroup.Done()
-		}()
+		conn, err := qrpc.NewConnection(serverAddr, qrpc.ConnectionConfig{}, nil)
+		if err != nil {
+			panic(err)
+		}
+		conns[serverAddr] = conn
 	}
-	routinesGroup.Wait()
 
-	d.Ack(false)
-}
+	for {
+		select {
+		case d := <-msgCh:
+			logger.Debug(string(d.Body))
 
-func goFunc(routinesGroup *sync.WaitGroup, f func()) {
-	routinesGroup.Add(1)
-	go func() {
-		defer routinesGroup.Done()
-		f()
-	}()
+			for _, serverAddr := range conf.Servers {
+				conn := conns[serverAddr]
+				_, resp, err := conn.Request(server.PushCmd, qrpc.NBFlag, d.Body)
+				if err != nil {
+					panic(err)
+				}
+				frame := resp.GetFrame()
+				if frame == nil {
+					panic("no response")
+				}
+			}
+
+			d.Ack(false)
+
+		case <-ctx.Done():
+		}
+	}
 }
 
 func initConfig() {

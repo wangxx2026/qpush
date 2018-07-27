@@ -2,11 +2,15 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	_ "net/http/pprof"
 	"qpush/modules/config"
 	"qpush/server"
-	"qpush/server/impl"
+	"qpush/server/cmd"
+	"qpush/server/internalcmd"
 	"time"
+
+	"github.com/zhiqiangxu/qrpc"
 
 	"github.com/spf13/cobra"
 )
@@ -31,35 +35,43 @@ func main() {
 		Short: "listen and server at specified address",
 		Run: func(cobraCmd *cobra.Command, args []string) {
 			var (
-				publicAddress   string
-				internalAddress string
+				publicAddr   string
+				internalAddr string
 			)
 			if len(args) > 0 {
-				publicAddress = args[0]
+				publicAddr = args[0]
 			} else {
-				publicAddress = DefaultPublicAddress
+				publicAddr = DefaultPublicAddress
 			}
 
 			if len(args) > 1 {
-				internalAddress = args[1]
+				internalAddr = args[1]
 			} else {
-				internalAddress = DefaultInternalAddress
+				internalAddr = DefaultInternalAddress
 			}
 
-			hbConfig := server.HeartBeatConfig{
-				Callback: func() error {
-					// logger.Info("heartbeat called")
-					//TODO call interface
-					return nil
-				},
-				Interval: ServerHeartBeatInteval}
-			serverConfig := server.Config{
-				ReadBufferSize: server.DefaultReadBufferSize,
-				HBConfig:       hbConfig}
+			handler := qrpc.NewServeMux()
+			handler.Handle(server.LoginCmd, &cmd.LoginCmd{})
+			handler.Handle(server.HeartBeatCmd, &cmd.HeartBeatCmd{})
+			handler.Handle(server.AckCmd, cmd.NewAckCmd())
 
-			s := impl.NewServer(&serverConfig)
+			internalHandler := qrpc.NewServeMux()
+			internalHandler.Handle(server.PushCmd, &internalcmd.PushCmd{})
+			internalHandler.Handle(server.ExecCmd, &internalcmd.ExecCmd{})
 
-			s.ListenAndServe(publicAddress, internalAddress)
+			bindings := []qrpc.ServerBinding{
+				qrpc.ServerBinding{Addr: publicAddr, Handler: handler},
+				qrpc.ServerBinding{Addr: internalAddr, Handler: internalHandler}}
+
+			go func() {
+				srv := &http.Server{Addr: "0.0.0.0:8080"}
+				fmt.Println(srv.ListenAndServe())
+			}()
+			server := qrpc.NewServer(bindings)
+			err := server.ListenAndServe()
+			if err != nil {
+				fmt.Println("ListenAndServe", err)
+			}
 		}}
 
 	cobra.OnInitialize(initConfig)

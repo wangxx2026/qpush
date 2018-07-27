@@ -1,10 +1,5 @@
 package client
 
-// Agent is only different from client when dial
-type Agent interface {
-	Dial(address string) MsgConnection
-}
-
 // Msg is model for message
 type Msg struct {
 	MsgID        string `json:"msg_id"`

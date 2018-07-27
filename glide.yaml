@@ -1,4 +1,0 @@
-package: qpush
-import:
-- package: github.com/BurntSushi/toml
-- package: github.com/spf13/cobra

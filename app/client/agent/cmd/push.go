@@ -1,12 +1,13 @@
-package agentcmd
+package cmd
 
 import (
+	"fmt"
 	"qpush/client"
-	"qpush/client/impl"
 	"qpush/modules/logger"
 	"qpush/server"
 
 	"github.com/spf13/cobra"
+	"github.com/zhiqiangxu/qrpc"
 )
 
 var pushCmd = &cobra.Command{
@@ -19,20 +20,27 @@ var pushCmd = &cobra.Command{
 		title := args[2]
 		content := args[3]
 
-		agent := impl.NewAgent()
-		conn := agent.Dial(internalAddress)
-		if conn == nil {
-			logger.Error("failed to dial")
+		conn, err := client.NewConnection(internalAddress, qrpc.ConnectionConfig{}, func(conn *client.Connection, frame *qrpc.Frame) {
+			fmt.Println("pushed", string(frame.Payload))
+		})
+		if err != nil {
+			logger.Error("NewConnection fail", err)
 			return
 		}
 
-		pushCmd := &client.PushCmd{Msg: client.Msg{MsgID: msgID, Title: title, Content: content}}
-		bytes, err := conn.SendCmdBlocking(server.PushCmd, pushCmd)
+		pushCmd := client.PushCmd{Msg: client.Msg{MsgID: msgID, Title: title, Content: content}}
+		_, resp, err := conn.Request(server.PushCmd, 0, pushCmd)
 		if err != nil {
-			logger.Error("SendCmdBlocking failed:", err)
+			logger.Error("Request failed:", err)
+			return
+		}
+		frame := resp.GetFrame()
+		if frame == nil {
+			logger.Error("GetFrame failed: nil")
+			return
 		}
 
-		logger.Info("result", string(bytes))
+		logger.Info("result", string(frame.Payload))
 	}}
 
 func init() {

@@ -1,4 +1,4 @@
-package agentcmd
+package cmd
 
 import (
 	"fmt"
