@@ -4,7 +4,7 @@
 -------------------
 
 ## Try
-```
+```bash
 go run app/server/main.go localhost:8888 localhost:8890 --env dev               #启动server
 
 go run app/client/consumer/client.go localhost:8888 1008 ddddddd xuzhiqiang     #启动client
