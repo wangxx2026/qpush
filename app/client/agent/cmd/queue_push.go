@@ -79,32 +79,43 @@ func handleMsg() {
 		conns[serverAddr] = conn
 	}
 
+	var wg sync.WaitGroup
 	for {
 		select {
 		case d := <-msgCh:
-			logger.Debug(string(d.Body))
 
-			var wg sync.WaitGroup
-			for _, serverAddr := range conf.Servers {
-				conn := conns[serverAddr]
-				_, resp, err := conn.Request(server.PushCmd, qrpc.NBFlag, d.Body)
-				if err != nil {
-					logger.Error("Request", err)
-					return
-				}
-				qrpc.GoFunc(&wg, func() {
-					frame := resp.GetFrame()
-					if frame == nil {
-						logger.Error("GetFrame nil")
-						cancelFunc()
-					}
-				})
+			select {
+			case <-ctx.Done():
+				return
+			default:
 			}
-			wg.Wait()
-			d.Ack(false)
+			qrpc.GoFunc(&wg, func() {
+				logger.Debug(string(d.Body))
+
+				var msgwg sync.WaitGroup
+				for _, serverAddr := range conf.Servers {
+					conn := conns[serverAddr]
+					_, resp, err := conn.Request(server.PushCmd, qrpc.NBFlag, d.Body)
+					if err != nil {
+						logger.Error("Request", err)
+						return
+					}
+					qrpc.GoFunc(&msgwg, func() {
+						frame := resp.GetFrame()
+						if frame == nil {
+							logger.Error("GetFrame nil")
+							cancelFunc()
+						}
+					})
+				}
+				msgwg.Wait()
+				d.Ack(false)
+			})
+
 		case <-ctx.Done():
 			return
 		case <-time.After(time.Second * 5):
+			wg.Wait()
 			fmt.Println("quit for idle")
 			return
 		}
