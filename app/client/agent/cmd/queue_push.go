@@ -7,6 +7,7 @@ import (
 	"qpush/modules/logger"
 	"qpush/modules/rabbitmq"
 	"qpush/server"
+	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -54,9 +55,6 @@ var queuePushCmd = &cobra.Command{
 
 			case <-ctx.Done():
 				return
-			case <-time.After(time.Second * 5):
-				fmt.Println("quit for idle")
-				return
 			}
 
 		}
@@ -86,21 +84,29 @@ func handleMsg() {
 		case d := <-msgCh:
 			logger.Debug(string(d.Body))
 
+			var wg sync.WaitGroup
 			for _, serverAddr := range conf.Servers {
 				conn := conns[serverAddr]
 				_, resp, err := conn.Request(server.PushCmd, qrpc.NBFlag, d.Body)
 				if err != nil {
-					panic(err)
+					logger.Error("Request", err)
+					return
 				}
-				frame := resp.GetFrame()
-				if frame == nil {
-					panic("no response")
-				}
+				qrpc.GoFunc(&wg, func() {
+					frame := resp.GetFrame()
+					if frame == nil {
+						logger.Error("GetFrame nil")
+						cancelFunc()
+					}
+				})
 			}
-
+			wg.Wait()
 			d.Ack(false)
-
 		case <-ctx.Done():
+			return
+		case <-time.After(time.Second * 5):
+			fmt.Println("quit for idle")
+			return
 		}
 	}
 }
