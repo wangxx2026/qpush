@@ -119,7 +119,7 @@ func handleMsg() {
 
 		case <-ctx.Done():
 			return
-		case <-time.After(time.Second * 5000):
+		case <-time.After(time.Second * 50000):
 			wg.Wait()
 			fmt.Println("quit for idle")
 			return
