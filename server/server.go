@@ -68,9 +68,10 @@ const (
 
 // DeviceInfo defines info on connection
 type DeviceInfo struct {
-	GUID  string
-	AppID int
-	Alias string
+	GUID   string
+	AppID  int
+	CityID int
+	OS     string
 }
 
 // GetAppGUID creates unique id by appID and guid

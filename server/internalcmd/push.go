@@ -73,6 +73,18 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 
 	qserver.WalkConn(0, func(writer qrpc.FrameWriter, ci *qrpc.ConnectionInfo) bool {
 		logger.Debug(*ci, ci.SC.GetID())
+
+		deviceInfo := ci.Anything.(*server.DeviceInfo)
+		if pushCmd.OS != "" {
+			if pushCmd.OS != deviceInfo.OS {
+				return true
+			}
+		}
+		if pushCmd.CityID != 0 {
+			if pushCmd.CityID != deviceInfo.CityID {
+				return true
+			}
+		}
 		qrpc.GoFunc(&wg, func() {
 			writer.StartWrite(pushID, server.ForwardCmd, qrpc.PushFlag)
 			writer.WriteBytes(bytes)

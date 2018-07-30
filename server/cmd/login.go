@@ -27,7 +27,8 @@ type LoginCmd struct {
 
 // OfflineMsgData is data part
 type OfflineMsgData struct {
-	Alias   string       `json:"alias"`
+	CityID  int          `json:"city_id"`
+	OS      string       `json:"os"`
 	MsgList []client.Msg `json:"msg_list"`
 }
 
@@ -84,7 +85,8 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 		return
 	}
 
-	deviceInfo.Alias = result.Data.Alias
+	deviceInfo.CityID = result.Data.CityID
+	deviceInfo.OS = result.Data.OS
 
 	jsonwriter.StartWrite(frame.RequestID, server.LoginRespCmd, 0)
 	jsonwriter.WriteJSON(result.Data.MsgList)

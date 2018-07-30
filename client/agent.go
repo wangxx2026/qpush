@@ -12,9 +12,11 @@ type Msg struct {
 
 // PushCmd is struct for push
 type PushCmd struct {
-	Msg   `json:"msg"`
-	AppID int      `json:"app_id"`
-	GUID  []string `json:"guid"`
+	Msg    `json:"msg"`
+	AppID  int      `json:"app_id"`
+	GUID   []string `json:"guid"`
+	CityID int      `json:"city_id"`
+	OS     string   `json:"os"`
 }
 
 // KillCmd is struct for kill
