@@ -29,7 +29,7 @@ func (cmd *ListGUIDCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFr
 func (cmd *ListGUIDCmd) writeResp(writer qrpc.FrameWriter, frame *qrpc.RequestFrame, result []string) {
 	jsonwriter := server.JSONFrameWriter{FrameWriter: writer}
 
-	jsonwriter.StartWrite(frame.RequestID, server.PushRespCmd, 0)
+	jsonwriter.StartWrite(frame.RequestID, server.ListGUIDRespCmd, 0)
 	jsonwriter.WriteJSON(result)
 	err := jsonwriter.EndWrite()
 	if err != nil {

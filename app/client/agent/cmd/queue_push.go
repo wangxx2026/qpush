@@ -47,7 +47,7 @@ var queuePushCmd = &cobra.Command{
 			case msg, ok := <-msgs:
 
 				if !ok {
-					fmt.Println("quit for channel close")
+					logger.Error("quit for channel close")
 					return
 				}
 
@@ -109,6 +109,7 @@ func handleMsg() {
 							logger.Error("GetFrame nil")
 							cancelFunc()
 						}
+						logger.Debug("push resp", string(frame.Payload))
 					})
 				}
 				logger.Debug("before msgwg wait")
