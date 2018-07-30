@@ -52,11 +52,11 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 		return
 	}
 
-	ci := frame.ConnectionInfo()
-	ci.Anything = &server.DeviceInfo{GUID: loginCmd.GUID, AppID: loginCmd.AppID}
+	deviceInfo := &server.DeviceInfo{GUID: loginCmd.GUID, AppID: loginCmd.AppID}
 
 	logger.Debug("test2")
 
+	ci := frame.ConnectionInfo()
 	serveconn := ci.SC
 	logger.Debug(server.GetAppGUID(loginCmd.AppID, loginCmd.GUID))
 	serveconn.SetID(server.GetAppGUID(loginCmd.AppID, loginCmd.GUID))
@@ -84,6 +84,8 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 		return
 	}
 
+	deviceInfo.Alias = result.Data.Alias
+
 	jsonwriter.StartWrite(frame.RequestID, server.LoginRespCmd, 0)
 	jsonwriter.WriteJSON(result.Data.MsgList)
 	err = jsonwriter.EndWrite()
@@ -93,5 +95,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 		return
 	}
 	logger.Debug("test6")
+
+	ci.Anything = deviceInfo
 
 }

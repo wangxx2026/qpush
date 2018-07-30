@@ -70,6 +70,7 @@ const (
 type DeviceInfo struct {
 	GUID  string
 	AppID int
+	Alias string
 }
 
 // GetAppGUID creates unique id by appID and guid
