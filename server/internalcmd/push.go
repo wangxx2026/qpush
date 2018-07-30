@@ -50,7 +50,6 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 	if pushCmd.AppID != 0 && len(pushCmd.GUID) > 0 {
 		ids := make([]string, 0, len(pushCmd.GUID))
 		for _, guid := range pushCmd.GUID {
-			logger.Debug("appguid", server.GetAppGUID(pushCmd.AppID, guid))
 			ids = append(ids, server.GetAppGUID(pushCmd.AppID, guid))
 		}
 

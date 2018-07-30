@@ -98,17 +98,22 @@ func handleMsg() {
 					_, resp, err := conn.Request(server.PushCmd, qrpc.NBFlag, d.Body)
 					if err != nil {
 						logger.Error("Request", err)
+						cancelFunc()
 						return
 					}
 					qrpc.GoFunc(&msgwg, func() {
+						logger.Debug("before GetFrame")
 						frame := resp.GetFrame()
+						logger.Debug("after GetFrame")
 						if frame == nil {
 							logger.Error("GetFrame nil")
 							cancelFunc()
 						}
 					})
 				}
+				logger.Debug("before msgwg wait")
 				msgwg.Wait()
+				logger.Debug("after msgwg wait")
 				d.Ack(false)
 			})
 

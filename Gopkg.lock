@@ -41,7 +41,7 @@
   branch = "master"
   name = "github.com/zhiqiangxu/qrpc"
   packages = ["."]
-  revision = "5fec1160c743c120ae015e22e8fa8279a27f93ee"
+  revision = "ece31b384dd5a1a07f40eff990edc989221376a3"
 
 [[projects]]
   branch = "master"
@@ -56,7 +56,7 @@
     "unix",
     "windows"
   ]
-  revision = "e072cadbbdc8dd3d3ffa82b8b4b9304c261d9311"
+  revision = "bd9dbc187b6e1dacfdd2722a87e83093c2d7bd6e"
 
 [solve-meta]
   analyzer-name = "dep"
