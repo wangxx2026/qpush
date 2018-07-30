@@ -9,3 +9,5 @@ GwHost = "gw.t.ywopt.com"
 Servers = ["106.14.50.182:8890"]
 
 RabbitMQ = "amqp://rabbitmq@123@47.100.48.166:5672"
+
+PushQueue = "push-queue"

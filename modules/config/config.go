@@ -9,6 +9,7 @@ type Value struct {
 	RedisAddr string
 	Servers   []string
 	RabbitMQ  string
+	PushQueue string
 }
 
 var (

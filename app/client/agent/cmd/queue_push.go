@@ -25,7 +25,6 @@ var (
 )
 
 const (
-	queue         = "push-queue"
 	prefetchCount = 100
 	pushTimeout   = 30
 )
@@ -62,7 +61,7 @@ var queuePushCmd = &cobra.Command{
 
 func getMsgs() <-chan amqp.Delivery {
 
-	return rabbitmq.GetMsgs(conf.RabbitMQ, queue, prefetchCount)
+	return rabbitmq.GetMsgs(conf.RabbitMQ, conf.PushQueue, prefetchCount)
 
 }
 
