@@ -71,17 +71,29 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 		return
 	}
 
+	// filter by city_ids
+	cityIDMap := make(map[int]struct{})
+	if len(pushCmd.CityIDS) > 0 {
+		for _, cityID := range pushCmd.CityIDS {
+			cityIDMap[cityID] = struct{}{}
+		}
+	}
+
 	qserver.WalkConn(0, func(writer qrpc.FrameWriter, ci *qrpc.ConnectionInfo) bool {
 		logger.Debug(*ci, ci.SC.GetID())
 
 		deviceInfo := ci.Anything.(*server.DeviceInfo)
+		// filter by os
 		if pushCmd.OS != "" {
 			if pushCmd.OS != deviceInfo.OS {
 				return true
 			}
 		}
-		if pushCmd.CityID != 0 {
-			if pushCmd.CityID != deviceInfo.CityID {
+		// filter by city_id
+		if len(cityIDMap) > 0 {
+
+			_, ok := cityIDMap[deviceInfo.CityID]
+			if !ok {
 				return true
 			}
 		}
