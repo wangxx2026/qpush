@@ -45,14 +45,18 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 
 	qserver := frame.ConnectionInfo().SC.Server()
 	pushID := qserver.GetPushID()
+	logger.Debug("PushCmd test1")
 	// single mode
 	if pushCmd.AppID != 0 && len(pushCmd.GUID) > 0 {
-		ids := make([]string, len(pushCmd.GUID))
+		var ids []string
 		for _, guid := range pushCmd.GUID {
+			logger.Debug("appguid", server.GetAppGUID(pushCmd.AppID, guid))
 			ids = append(ids, server.GetAppGUID(pushCmd.AppID, guid))
 		}
 
+		logger.Debug("ids", len(ids), ids)
 		qserver.WalkConnByID(0, ids, func(w qrpc.FrameWriter, ci *qrpc.ConnectionInfo) {
+			logger.Debug("WalkConnByID")
 			qrpc.GoFunc(&wg, func() {
 				w.StartWrite(pushID, server.ForwardCmd, qrpc.PushFlag)
 				w.WriteBytes(bytes)

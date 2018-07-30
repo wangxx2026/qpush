@@ -74,6 +74,8 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 		return
 	}
 
+	logger.Debug("test4")
+
 	var result OfflineMsg
 	err = json.Unmarshal(resp, &result)
 	if err != nil {
@@ -85,8 +87,11 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	jsonwriter.StartWrite(frame.RequestID, server.LoginRespCmd, 0)
 	jsonwriter.WriteJSON(result.Data.MsgList)
 	err = jsonwriter.EndWrite()
+	logger.Debug("test5")
 	if err != nil {
 		logger.Error("EndWrite", err)
 		return
 	}
+	logger.Debug("test6")
+
 }

@@ -61,6 +61,7 @@ func main() {
 
 			internalHandler := qrpc.NewServeMux()
 			internalHandler.Handle(server.PushCmd, &internalcmd.PushCmd{})
+			internalHandler.Handle(server.ListGUIDCmd, &internalcmd.ListGUIDCmd{})
 			internalHandler.Handle(server.ExecCmd, &internalcmd.ExecCmd{})
 
 			bindings := []qrpc.ServerBinding{
