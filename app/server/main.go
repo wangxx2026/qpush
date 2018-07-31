@@ -63,6 +63,7 @@ func main() {
 			internalHandler.Handle(server.PushCmd, &internalcmd.PushCmd{})
 			internalHandler.Handle(server.ListGUIDCmd, &internalcmd.ListGUIDCmd{})
 			internalHandler.Handle(server.ExecCmd, &internalcmd.ExecCmd{})
+			internalHandler.Handle(server.KillCmd, &internalcmd.KillCmd{})
 
 			bindings := []qrpc.ServerBinding{
 				qrpc.ServerBinding{Addr: publicAddr, Handler: handler},
