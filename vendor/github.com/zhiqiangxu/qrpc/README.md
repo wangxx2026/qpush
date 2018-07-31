@@ -246,3 +246,9 @@ To handle `pushed` message, the relevant change at `client` side is:
 
 
 There are even more features like `StreamRstFlag`!
+
+## Performance
+
+![avatar](https://raw.githubusercontent.com/zhiqiangxu/qrpc/master/doc/performance.jpg)
+
+About **4** times faster than http!
