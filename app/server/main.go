@@ -6,12 +6,16 @@ import (
 	"io"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
+	"os/signal"
 	"qpush/client"
 	"qpush/modules/config"
+	"qpush/modules/logger"
 	"qpush/server"
 	"qpush/server/cmd"
 	"qpush/server/internalcmd"
 	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/zhiqiangxu/qrpc"
@@ -104,10 +108,23 @@ func main() {
 				})
 				fmt.Println(srv.ListenAndServe())
 			}()
-			err := qserver.ListenAndServe()
+			go func() {
+				err := qserver.ListenAndServe()
+				if err != nil {
+					fmt.Println("ListenAndServe", err)
+				}
+			}()
+
+			quitChan := make(chan os.Signal, 1)
+			signal.Notify(quitChan, os.Interrupt, os.Kill, syscall.SIGTERM)
+
+			<-quitChan
+			err := qserver.Shutdown()
+			logger.Info("Shutdown")
 			if err != nil {
-				fmt.Println("ListenAndServe", err)
+				logger.Error("Shutdown", err)
 			}
+
 		}}
 
 	cobra.OnInitialize(initConfig)
