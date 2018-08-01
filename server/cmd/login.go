@@ -7,7 +7,10 @@ import (
 	"qpush/modules/http"
 	"qpush/modules/logger"
 	"qpush/server"
+	"strconv"
+	"sync"
 
+	"github.com/go-kit/kit/metrics"
 	"github.com/zhiqiangxu/qrpc"
 )
 
@@ -23,6 +26,14 @@ const (
 
 // LoginCmd do login
 type LoginCmd struct {
+	m           sync.Mutex
+	onlineStat  map[int]int64 //appid -> count
+	gaugeMetric metrics.Gauge
+}
+
+// NewLoginCmd returns a LoginCmd instance
+func NewLoginCmd(gaugeMetric metrics.Gauge) *LoginCmd {
+	return &LoginCmd{onlineStat: make(map[int]int64), gaugeMetric: gaugeMetric}
 }
 
 // OfflineMsgData is data part
@@ -100,4 +111,25 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 
 	ci.Anything = deviceInfo
 
+	cmd.m.Lock()
+	v := cmd.onlineStat[loginCmd.AppID]
+	cmd.onlineStat[loginCmd.AppID] = v + 1
+	cmd.m.Unlock()
+
+	labels := []string{"appid", strconv.Itoa(loginCmd.AppID), "kind", "online"}
+	cmd.gaugeMetric.With(labels...).Set(float64(v + 1))
+
+	serveconn.NotifyWhenClose(func() {
+		cmd.m.Lock()
+		v := cmd.onlineStat[loginCmd.AppID]
+		if v > 0 {
+			cmd.onlineStat[loginCmd.AppID] = v - 1
+			cmd.m.Unlock()
+			cmd.gaugeMetric.With(labels...).Set(float64(v - 1))
+		} else {
+			cmd.m.Unlock()
+			logger.Error("bug happend")
+		}
+
+	})
 }

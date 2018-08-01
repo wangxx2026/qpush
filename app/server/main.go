@@ -18,9 +18,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/zhiqiangxu/qrpc"
-
+	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
+	"github.com/zhiqiangxu/qrpc"
 )
 
 const (
@@ -58,8 +60,15 @@ func main() {
 				internalAddr = DefaultInternalAddress
 			}
 
+			gaugeMetric := kitprometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
+				Namespace: "qpush",
+				Subsystem: "qpush",
+				Name:      "online_result",
+				Help:      "The online count result per app.",
+			}, []string{"appid", "kind"}) // no fields here
+
 			handler := qrpc.NewServeMux()
-			handler.Handle(server.LoginCmd, &cmd.LoginCmd{})
+			handler.Handle(server.LoginCmd, cmd.NewLoginCmd(gaugeMetric))
 			handler.Handle(server.HeartBeatCmd, &cmd.HeartBeatCmd{})
 			handler.Handle(server.AckCmd, cmd.NewAckCmd())
 
@@ -77,6 +86,7 @@ func main() {
 
 			go func() {
 				srv := &http.Server{Addr: "0.0.0.0:8080"}
+				http.Handle("/metrics", promhttp.Handler())
 				http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 					if config.Get().Env == config.ProdEnv {
@@ -107,6 +117,7 @@ func main() {
 					io.WriteString(w, "ok\n")
 				})
 				fmt.Println(srv.ListenAndServe())
+
 			}()
 			go func() {
 				err := qserver.ListenAndServe()
