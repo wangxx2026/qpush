@@ -25,6 +25,7 @@ node {
              if (env.BRANCH_NAME == 'master') {
 
                  sh "sed 's/qpush:latest/qpush:${imageName}/' ${env.WORKSPACE}/deploy/kubectl-yaml/server-deployment.yaml | /usr/local/bin/kubectl apply -f - "
+                 sh "sed 's/qpush:latest/qpush:${imageName}/' ${env.WORKSPACE}/deploy/kubectl-yaml/agent-deployment.yaml | /usr/local/bin/kubectl apply -f - "
 
              } else if(env.BRANCH_NAME == 'deployment1') {
 
