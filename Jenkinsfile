@@ -28,7 +28,6 @@ node {
 
              } else if(env.BRANCH_NAME == 'deployment1') {
 
-
                  sh "sed 's/carrier:latest/qpush:${imageName}/' ${env.WORKSPACE}/deployments/carrier.yaml | /usr/local/bin/kubectl apply -f - "
 
 

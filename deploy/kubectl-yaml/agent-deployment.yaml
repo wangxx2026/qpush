@@ -1,25 +1,27 @@
 apiVersion: apps/v1 #  for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
 kind: Deployment
 metadata:
-  name: push-go-deployment
+  name: qpush-agent-deployment
   labels:
     app: push-go
 spec:
   selector:
     matchLabels:
-      app: push-go
+      app: qpush-agent
   replicas: 1
   template:
     metadata:
       labels:
-        app: push-go
+        app: qpush-agent
     spec:
       containers:
-      - name: push-go
-        image: h1.ywopt.com/ywopt.com/push-go:latest
+      - name: qpush-agent
+        image: h1.ywopt.com/ywopt.com/qpush:latest
         env:
         - name: CONF
           value: "conf_test.toml"
+        - name: EXEC_FILE
+          value: "app/client/agent/agent.go queue_push"
         - name: JAEGER_AGENT_HOST
           valueFrom:
             fieldRef:
