@@ -63,8 +63,8 @@ func main() {
 			gaugeMetric := kitprometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
 				Namespace: "qpush",
 				Subsystem: "server",
-				Name:      "online_result",
-				Help:      "The online count result per app.",
+				Name:      "gauge_result",
+				Help:      "The gauge result per app.",
 			}, []string{"appid", "kind"}) // no fields here
 
 			handler := qrpc.NewServeMux()
