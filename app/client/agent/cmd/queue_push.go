@@ -89,7 +89,7 @@ func handleMsg() {
 			default:
 			}
 			qrpc.GoFunc(&wg, func() {
-				logger.Debug(string(d.Body))
+				logger.Info(string(d.Body))
 
 				var msgwg sync.WaitGroup
 				for _, serverAddr := range conf.Servers {
@@ -115,6 +115,7 @@ func handleMsg() {
 				msgwg.Wait()
 				logger.Debug("after msgwg wait")
 				d.Ack(false)
+				logger.Info("done")
 			})
 
 		case <-ctx.Done():
