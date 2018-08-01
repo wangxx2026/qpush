@@ -65,7 +65,7 @@ func main() {
 				Subsystem: "server",
 				Name:      "gauge_result",
 				Help:      "The gauge result per app.",
-			}, []string{"appid", "kind"}) // no fields here
+			}, []string{"appid", "kind"})
 
 			handler := qrpc.NewServeMux()
 			handler.Handle(server.LoginCmd, cmd.NewLoginCmd(gaugeMetric))
