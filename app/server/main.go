@@ -70,7 +70,7 @@ func main() {
 			internalHandler.Handle(server.KillCmd, &internalcmd.KillCmd{})
 
 			bindings := []qrpc.ServerBinding{
-				qrpc.ServerBinding{Addr: publicAddr, Handler: handler},
+				qrpc.ServerBinding{Addr: publicAddr, Handler: handler, DefaultReadTimeout: 10 /*second*/},
 				qrpc.ServerBinding{Addr: internalAddr, Handler: internalHandler}}
 
 			qserver := qrpc.NewServer(bindings)
