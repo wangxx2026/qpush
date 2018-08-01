@@ -71,16 +71,17 @@ func (cmd *AckCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) 
 
 	cmd.lock.Lock()
 
-	_, ok = cmd.queuedAck[appGUID]
+	ack, ok := cmd.queuedAck[appGUID]
 	if !ok {
-		cmd.queuedAck[appGUID] = make(map[string]map[int]struct{})
+		ack = make(map[string]map[int]struct{})
+		cmd.queuedAck[appGUID] = ack
 	}
 	for _, id := range ackCmd.MsgIDS {
-		_, ok := cmd.queuedAck[appGUID][id]
+		_, ok := ack[id]
 		if !ok {
-			cmd.queuedAck[appGUID][id] = make(map[int]struct{})
+			ack[id] = make(map[int]struct{})
 		}
-		cmd.queuedAck[appGUID][id][ackCmd.Type] = struct{}{}
+		ack[id][ackCmd.Type] = struct{}{}
 	}
 
 	if len(cmd.queuedAck) >= BatchAckNumber {
