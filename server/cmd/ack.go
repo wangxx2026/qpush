@@ -15,7 +15,7 @@ import (
 
 // NewAckCmd creates an AckCmd instance
 func NewAckCmd() *AckCmd {
-	cmd := &AckCmd{queuedAck: make(map[string]map[string]bool), batchSignal: make(chan bool, 1)}
+	cmd := &AckCmd{queuedAck: make(map[string]map[string]map[int]struct{}), batchSignal: make(chan struct{}, 1)}
 	go cmd.syncAck()
 	return cmd
 }
@@ -23,8 +23,8 @@ func NewAckCmd() *AckCmd {
 // AckCmd do ack
 type AckCmd struct {
 	lock        sync.Mutex
-	batchSignal chan bool
-	queuedAck   map[string]map[string]bool
+	batchSignal chan struct{}
+	queuedAck   map[string]map[string]map[int]struct{} //appguid msg_id type
 }
 
 const (
@@ -73,18 +73,21 @@ func (cmd *AckCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) 
 
 	_, ok = cmd.queuedAck[appGUID]
 	if !ok {
-		cmd.queuedAck[appGUID] = make(map[string]bool)
+		cmd.queuedAck[appGUID] = make(map[string]map[int]struct{})
 	}
 	for _, id := range ackCmd.MsgIDS {
-		cmd.queuedAck[appGUID][id] = true
+		_, ok := cmd.queuedAck[appGUID][id]
+		if !ok {
+			cmd.queuedAck[appGUID][id] = make(map[int]struct{})
+		}
+		cmd.queuedAck[appGUID][id][ackCmd.Type] = struct{}{}
 	}
 
-	if len(cmd.queuedAck) >= BatchAckNumber || len(cmd.queuedAck[appGUID]) > BatchAckNumber {
+	if len(cmd.queuedAck) >= BatchAckNumber {
 		select {
-		case cmd.batchSignal <- true:
+		case cmd.batchSignal <- struct{}{}:
 		default:
 		}
-
 	}
 
 	cmd.lock.Unlock()
@@ -113,21 +116,24 @@ func (cmd *AckCmd) syncAck() {
 		cmd.lock.Lock()
 		// fast copy and unlock
 		queuedAck := cmd.queuedAck
-		cmd.queuedAck = make(map[string]map[string]bool)
+		cmd.queuedAck = make(map[string]map[string]map[int]struct{})
 		cmd.lock.Unlock()
 
-		ackData := make(map[string][]string)
+		ackData := make(map[string]map[string][]int)
 		for appGUID, idMap := range queuedAck {
-			ids := make([]string, 0, len(idMap))
-			for id := range idMap {
-				ids = append(ids, id)
+			ids := make(map[string][]int)
+			for id, typeMap := range idMap {
+				types := make([]int, 0, len(typeMap))
+				for tp := range typeMap {
+					types = append(types, tp)
+				}
+				ids[id] = types
 			}
-
 			ackData[appGUID] = ids
 
-			if len(ackData) > BatchAckNumber || len(ids) > BatchAckNumber {
+			if len(ackData) > BatchAckNumber {
 				cmd.syncBatch(ackData)
-				ackData = make(map[string][]string)
+				ackData = make(map[string]map[string][]int)
 			}
 		}
 
@@ -144,19 +150,27 @@ func (cmd *AckCmd) syncAck() {
 type ackRequest struct {
 	NotifyData []ackRecord `json:"notify_data"`
 }
+type idType struct {
+	MsgID string `josn:"msg_id"`
+	Types []int  `json:"types"`
+}
 type ackRecord struct {
-	MsgIDS []string `json:"msg_ids"`
-	GUID   string   `json:"guid"`
+	IDTypes []idType `json:"id_types"`
+	GUID    string   `json:"guid"`
 }
 type ackResponse struct {
 	Code int    `json:"code"`
 	MSG  string `json:"msg"`
 }
 
-func (cmd *AckCmd) syncBatch(ackData map[string][]string) {
+func (cmd *AckCmd) syncBatch(ackData map[string]map[string][]int) {
 	request := ackRequest{NotifyData: make([]ackRecord, 0, len(ackData))}
-	for appGUID, ids := range ackData {
-		record := ackRecord{MsgIDS: ids, GUID: appGUID}
+	for appGUID, id2Types := range ackData {
+		idTypes := make([]idType, 0, len(id2Types))
+		for id, types := range id2Types {
+			idTypes = append(idTypes, idType{MsgID: id, Types: types})
+		}
+		record := ackRecord{IDTypes: idTypes, GUID: appGUID}
 		request.NotifyData = append(request.NotifyData, record)
 	}
 
