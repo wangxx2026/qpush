@@ -153,7 +153,7 @@ type ackRequest struct {
 	NotifyData []ackRecord `json:"notify_data"`
 }
 type idType struct {
-	MsgID string `josn:"msg_id"`
+	MsgID string `json:"msg_id"`
 	Types []int  `json:"types"`
 }
 type ackRecord struct {
