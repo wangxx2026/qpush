@@ -86,7 +86,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 		return
 	}
 
-	logger.Debug("test4")
+	logger.Debug("resp", string(resp))
 
 	var result OfflineMsg
 	err = json.Unmarshal(resp, &result)

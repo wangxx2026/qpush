@@ -89,7 +89,8 @@ func handleMsg() {
 			default:
 			}
 			qrpc.GoFunc(&wg, func() {
-				logger.Info(string(d.Body))
+				uuid := qrpc.PoorManUUID()
+				logger.Info(uuid, string(d.Body))
 
 				var msgwg sync.WaitGroup
 				for _, serverAddr := range conf.Servers {
@@ -108,14 +109,14 @@ func handleMsg() {
 							logger.Error("GetFrame nil")
 							cancelFunc()
 						}
-						logger.Debug("push resp", string(frame.Payload))
+						logger.Info(uuid, "push resp", string(frame.Payload))
 					})
 				}
 				logger.Debug("before msgwg wait")
 				msgwg.Wait()
 				logger.Debug("after msgwg wait")
 				d.Ack(false)
-				logger.Info("done")
+				logger.Info(uuid, "done")
 			})
 
 		case <-ctx.Done():
