@@ -8,7 +8,6 @@ import (
 	"qpush/modules/logger"
 	"qpush/server"
 	"qpush/server/internalcmd"
-	"sync"
 
 	"github.com/zhiqiangxu/qrpc"
 
@@ -57,10 +56,16 @@ var execCmd = &cobra.Command{
 			return
 		}
 		frame := resp.GetFrame()
-		var wg sync.WaitGroup
-		qrpc.GoFunc(&wg, func() {
-			pipeInput(streamwriter)
-		})
+		// Set stdin in raw mode.
+		oldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
+		if err != nil {
+			panic(err)
+		}
+		defer func() {
+			_ = terminal.Restore(int(os.Stdin.Fd()), oldState)
+			// fmt.Println("terminal.Restored")
+		}() // Best effort.
+		go pipeInput(streamwriter)
 		nextFrame := frame
 		for {
 			if nextFrame.Flags&qrpc.StreamEndFlag == 0 {
@@ -68,18 +73,18 @@ var execCmd = &cobra.Command{
 				os.Stdout.Write(nextFrame.Payload)
 			} else {
 				conn.Close(nil)
-				fmt.Printf("Press any key to exit\r\n")
+				// fmt.Println("Close")
 				break
 			}
 
+			// fmt.Println("test1")
 			nextFrame = <-frame.FrameCh()
+			// fmt.Println("test2")
 			if nextFrame == nil {
-				fmt.Println("nil NextFrame")
+				// fmt.Println("nil NextFrame")
 				break
 			}
 		}
-
-		wg.Wait()
 
 	}}
 
@@ -89,17 +94,7 @@ func init() {
 
 func pipeInput(streamwriter *client.StreamWriter) {
 
-	// Set stdin in raw mode.
-	oldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		_ = terminal.Restore(int(os.Stdin.Fd()), oldState)
-		// fmt.Println("terminal.Restored")
-	}() // Best effort.
-
-	_, err = io.Copy(&writer{streamwriter}, os.Stdin)
+	_, err := io.Copy(&writer{streamwriter}, os.Stdin)
 	if err != nil {
 		// logger.Error("Copy error", err)
 	}
@@ -115,6 +110,7 @@ func (w *writer) Write(data []byte) (int, error) {
 	w.streamwriter.StreamWriter.WriteBytes(data)
 	err := w.streamwriter.EndWrite(false)
 	if err != nil {
+		fmt.Println("EndWrite", err)
 		return 0, err
 	}
 
