@@ -66,6 +66,12 @@ func main() {
 				Name:      "gauge_result",
 				Help:      "The gauge result per app.",
 			}, []string{"appid", "kind"})
+			summaryMetric := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+				Namespace: "qpush",
+				Subsystem: "server",
+				Name:      "summary_result",
+				Help:      "request latency.",
+			}, []string{"method", "error"})
 
 			handler := qrpc.NewServeMux()
 			handler.Handle(server.LoginCmd, cmd.NewLoginCmd(gaugeMetric))
@@ -79,8 +85,8 @@ func main() {
 			internalHandler.Handle(server.KillCmd, &internalcmd.KillCmd{})
 
 			bindings := []qrpc.ServerBinding{
-				qrpc.ServerBinding{Addr: publicAddr, Handler: handler, DefaultReadTimeout: 10 /*second*/},
-				qrpc.ServerBinding{Addr: internalAddr, Handler: internalHandler}}
+				qrpc.ServerBinding{Addr: publicAddr, Handler: handler, DefaultReadTimeout: 10 /*second*/, LatencyMetric: summaryMetric},
+				qrpc.ServerBinding{Addr: internalAddr, Handler: internalHandler, LatencyMetric: summaryMetric}}
 
 			qserver := qrpc.NewServer(bindings)
 
