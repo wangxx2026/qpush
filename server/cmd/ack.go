@@ -106,7 +106,7 @@ func (cmd *AckCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) 
 		logger.Error("EndWrite", err)
 		return
 	}
-	logger.Info("qrpc request param", string(frame.Payload))
+	// logger.Info("qrpc request param", string(frame.Payload))
 }
 
 func (cmd *AckCmd) syncAck() {
@@ -175,8 +175,8 @@ func (cmd *AckCmd) syncBatch(ackData map[string]map[string][]int) {
 		record := ackRecord{IDTypes: idTypes, GUID: appGUID}
 		request.NotifyData = append(request.NotifyData, record)
 	}
-	bytes, _ := json.Marshal(request)
-	logger.Info("http request param", string(bytes))
+	// bytes, _ := json.Marshal(request)
+	// logger.Info("http request param", string(bytes))
 
 	for {
 		// send ack message
