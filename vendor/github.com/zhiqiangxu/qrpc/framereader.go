@@ -65,6 +65,7 @@ start:
 		ok := s.AddInFrame(f)
 		if !ok {
 			<-s.Done()
+			cs.DeleteStream(s, flags&PushFlag != 0)
 		}
 
 		goto start

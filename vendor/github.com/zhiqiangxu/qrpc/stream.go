@@ -7,9 +7,11 @@ import (
 
 // connstreams hosts all streams on connection
 type connstreams struct {
-	mu          sync.Mutex
-	streams     map[uint64]*stream // non pushed streams
-	pushstreams map[uint64]*stream // mutated 1. by framereader 2. G watching connection close
+	mu      sync.Mutex
+	streams map[uint64]*stream //non pushed streams
+
+	// no need to lock, it's only saved by framereader
+	pushstreams map[uint64]*stream
 
 	wg sync.WaitGroup
 }
@@ -20,26 +22,22 @@ func newConnStreams() *connstreams {
 
 func (cs *connstreams) Wait() {
 	cs.wg.Wait()
-	if len(cs.pushstreams) > 0 {
-		panic("pushstreams not released")
-	}
-	if len(cs.streams) > 0 {
-		panic("streams not released")
-	}
 }
 
 // GetStream tries to get the associated stream, called by framereader for rst frame
 func (cs *connstreams) GetStream(requestID uint64, flags FrameFlag) *stream {
-	var target map[uint64]*stream
 	if flags.IsPush() {
-		target = cs.pushstreams
-	} else {
-		target = cs.streams
+		s, ok := cs.pushstreams[requestID]
+		if ok {
+			return s
+		}
+
+		return nil
 	}
 
 	cs.mu.Lock()
-	s, ok := target[requestID]
-	cs.mu.Unlock()
+	defer cs.mu.Unlock()
+	s, ok := cs.streams[requestID]
 	if ok {
 		return s
 	}
@@ -50,34 +48,57 @@ func (cs *connstreams) GetStream(requestID uint64, flags FrameFlag) *stream {
 // get or create the associated stream atomically
 // if PushFlag is set, should only call CreateOrGetStream if caller is framereader
 func (cs *connstreams) CreateOrGetStream(ctx context.Context, requestID uint64, flags FrameFlag) *stream {
-	var (
-		target map[uint64]*stream
-	)
 	if flags.IsPush() {
-		target = cs.pushstreams
-	} else {
-		target = cs.streams
+		s, ok := cs.pushstreams[requestID]
+		if !ok {
+			s = newStream(ctx, requestID)
+			cs.pushstreams[requestID] = s
+
+			GoFunc(&cs.wg, func() {
+				select {
+				case <-s.Done():
+					cs.DeleteStream(s, flags.IsPush())
+				}
+			})
+			return s
+		}
+
+		return s
 	}
 
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
-	s, ok := target[requestID]
+	s, ok := cs.streams[requestID]
 	if !ok {
-		s = newStream(ctx, requestID, &cs.wg)
-		target[requestID] = s
-		s.NotifyWhenClose(func() {
-			cs.mu.Lock()
-			os, ok := target[requestID]
-			if ok && os == s {
-				delete(target, requestID)
-			}
-			cs.mu.Unlock()
-			if !ok {
-				panic("DeleteStream fail")
-			}
-		})
+		s = newStream(ctx, requestID)
+		cs.streams[requestID] = s
+		return s
 	}
 	return s
+}
+
+// it should only be called when stream is fully closed
+// return value mean whether delete happened or not
+func (cs *connstreams) DeleteStream(s *stream, isPush bool) bool {
+	if isPush {
+		os, ok := cs.pushstreams[s.ID]
+		if ok && os == s {
+			delete(cs.pushstreams, s.ID)
+			return true
+		}
+		return false
+	}
+
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
+	os, ok := cs.streams[s.ID]
+	if ok && os == s {
+		delete(cs.streams, s.ID)
+		return true
+	}
+
+	return false
 }
 
 type stream struct {
@@ -86,32 +107,17 @@ type stream struct {
 	ctx        context.Context
 	cancelFunc context.CancelFunc
 
-	mu          sync.Mutex
-	closedSelf  bool
-	closedPeer  bool
-	fullClosed  bool
-	binded      bool
-	fullCloseCh chan struct{}
-	closeNotify []func() // called when stream is fully closed
+	mu         sync.Mutex
+	closedSelf bool
+	closedPeer bool
+	binded     bool
 }
 
-func newStream(ctx context.Context, requestID uint64, wg *sync.WaitGroup) *stream {
+func newStream(ctx context.Context, requestID uint64) *stream {
 	ctx, cancelFunc := context.WithCancel(ctx)
-	s := &stream{ctx: ctx, cancelFunc: cancelFunc, ID: requestID, frameCh: make(chan *Frame), fullCloseCh: make(chan struct{})}
+	s := &stream{ctx: ctx, cancelFunc: cancelFunc, ID: requestID, frameCh: make(chan *Frame)}
 
-	GoFunc(wg, func() {
-		select {
-		case <-ctx.Done():
-			s.ensureClose()
-		}
-	})
 	return s
-}
-
-func (s *stream) NotifyWhenClose(f func()) {
-	s.mu.Lock()
-	s.closeNotify = append(s.closeNotify, f)
-	s.mu.Unlock()
 }
 
 func (s *stream) IsSelfClosed() bool {
@@ -142,9 +148,8 @@ func (s *stream) TryBind(firstFrame *Frame) bool {
 }
 
 // Done returns a channel for caller to wait for stream close
-// when channel returned, stream is cleanly closed
 func (s *stream) Done() <-chan struct{} {
-	return s.fullCloseCh
+	return s.ctx.Done()
 }
 
 // AddInFrame tries to add an inframe to stream
@@ -182,6 +187,7 @@ func (s *stream) closePeerIfNeeded(flags FrameFlag) {
 
 	if flags.IsDone() {
 		s.closedPeer = true
+
 		close(s.frameCh)
 		if s.closedSelf {
 			s.reset()
@@ -228,39 +234,13 @@ func (s *stream) AddOutFrame(requestID uint64, flags FrameFlag) bool {
 
 func (s *stream) ResetByPeer() {
 	s.mu.Lock()
-	if !s.closedPeer {
-		s.closedPeer = true
-		close(s.frameCh)
-	}
+	s.closedPeer = true
 	s.mu.Unlock()
 
 	s.reset()
 }
 
-func (s *stream) ensureClose() {
-	s.mu.Lock()
-	if !s.closedPeer {
-		s.closedPeer = true
-		close(s.frameCh)
-	}
-	closeNotify := s.closeNotify
-	s.closeNotify = nil
-	fullClosed := s.fullClosed
-	if !fullClosed {
-		s.fullClosed = true
-	}
-	s.mu.Unlock()
-	for _, f := range closeNotify {
-		f()
-	}
-	closeNotify = nil
-	if !fullClosed {
-		close(s.fullCloseCh)
-	}
-}
-
 func (s *stream) reset() {
 
 	s.cancelFunc()
-
 }
