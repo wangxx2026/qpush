@@ -95,6 +95,11 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 		frame.Close()
 		return
 	}
+	if result.Code != 0 {
+		logger.Error("login failed", string(resp))
+		frame.Close()
+		return
+	}
 
 	deviceInfo.CityID = result.Data.CityID
 	deviceInfo.OS = result.Data.OS
