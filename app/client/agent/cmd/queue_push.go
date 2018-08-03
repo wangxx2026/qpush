@@ -8,6 +8,7 @@ import (
 	"qpush/modules/rabbitmq"
 	"qpush/server"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -65,11 +66,7 @@ func getMsgs() <-chan amqp.Delivery {
 
 }
 
-func handleMsg() {
-
-	defer cancelFunc()
-
-	conns := make(map[string]*qrpc.Connection)
+func initconnect(conns map[string]*qrpc.Connection) {
 	for _, serverAddr := range conf.Servers {
 		conn, err := qrpc.NewConnection(serverAddr, qrpc.ConnectionConfig{}, nil)
 		if err != nil {
@@ -77,8 +74,24 @@ func handleMsg() {
 		}
 		conns[serverAddr] = conn
 	}
+}
 
-	var wg sync.WaitGroup
+func reconnect(conns map[string]*qrpc.Connection) {
+	for k, conn := range conns {
+		conn.Close(nil)
+		delete(conns, k)
+	}
+
+	initconnect(conns)
+}
+
+func handleMsg() {
+
+	defer cancelFunc()
+
+	conns := make(map[string]*qrpc.Connection)
+	initconnect(conns)
+
 	for {
 		select {
 		case d := <-msgCh:
@@ -88,41 +101,53 @@ func handleMsg() {
 				return
 			default:
 			}
-			qrpc.GoFunc(&wg, func() {
-				uuid := qrpc.PoorManUUID()
-				logger.Info(uuid, string(d.Body))
+			uuid := qrpc.PoorManUUID()
+			logger.Info(uuid, string(d.Body))
 
-				var msgwg sync.WaitGroup
-				for _, serverAddr := range conf.Servers {
-					conn := conns[serverAddr]
-					_, resp, err := conn.Request(server.PushCmd, qrpc.NBFlag, d.Body)
-					if err != nil {
-						logger.Error("Request", err)
-						cancelFunc()
+		one_msg:
+			msgwg := sync.WaitGroup{}
+			failed := int32(0)
+			for _, serverAddr := range conf.Servers {
+				conn := conns[serverAddr]
+				_, resp, err := conn.Request(server.PushCmd, qrpc.NBFlag, d.Body)
+				if err != nil {
+					logger.Error(uuid, "Request", err, "reconnect")
+					reconnect(conns)
+					goto one_msg
+				}
+
+				qrpc.GoFunc(&msgwg, func() {
+					logger.Debug("before GetFrame")
+					frame := resp.GetFrame()
+					logger.Debug("after GetFrame")
+					if frame == nil {
+						logger.Error(uuid, "GetFrame nil")
+						atomic.StoreInt32(&failed, 1)
 						return
 					}
-					qrpc.GoFunc(&msgwg, func() {
-						logger.Debug("before GetFrame")
-						frame := resp.GetFrame()
-						logger.Debug("after GetFrame")
-						if frame == nil {
-							logger.Error("GetFrame nil")
-							cancelFunc()
-						}
-						logger.Info(uuid, "push resp", string(frame.Payload))
-					})
-				}
-				logger.Debug("before msgwg wait")
-				msgwg.Wait()
-				logger.Debug("after msgwg wait")
-				d.Ack(false)
+					logger.Info(uuid, "push resp", string(frame.Payload))
+				})
+			}
+			logger.Debug("before msgwg wait")
+			msgwg.Wait()
+			logger.Debug("after msgwg wait")
+			if failed != 0 {
+				logger.Error(uuid, "resp fail, reconnect")
+				reconnect(conns)
+				goto one_msg
+			}
+
+			err := d.Ack(false)
+			if err == nil {
 				logger.Info(uuid, "done")
-			})
+			} else {
+				logger.Info(uuid, "ack error", err, "quit")
+				cancelFunc()
+			}
 
 		case <-ctx.Done():
 			return
 		case <-time.After(time.Second * 50000):
-			wg.Wait()
 			fmt.Println("quit for idle")
 			return
 		}
