@@ -15,6 +15,7 @@ import (
 	"qpush/server/cmd"
 	"qpush/server/internalcmd"
 	"runtime"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -99,25 +100,35 @@ func main() {
 						return
 					}
 
-					if r.URL.Path != "/" {
-						return
+					logger.Debug("tsetxxx", r.URL.Path)
+					switch r.URL.Path {
+					case "/":
+						id := "1"
+						title := "test title"
+						content := "test content"
+
+						msg := client.Msg{
+							MsgID: id, Title: title, Content: content}
+						payload, _ := json.Marshal(msg)
+						pushID := qserver.GetPushID()
+
+						qserver.WalkConn(0, func(w qrpc.FrameWriter, ci *qrpc.ConnectionInfo) bool {
+							w.StartWrite(pushID, server.ForwardCmd, qrpc.PushFlag)
+							w.WriteBytes(payload)
+							w.EndWrite()
+							return true
+						})
+					case "/kill":
+						appid := r.URL.Query().Get("appid")
+						id, err := strconv.Atoi(appid)
+						if err != nil {
+							panic(err)
+						}
+						guid := r.URL.Query().Get("guid")
+						qserver.WalkConnByID(0, []string{server.GetAppGUID(id, guid)}, func(w qrpc.FrameWriter, ci *qrpc.ConnectionInfo) {
+							ci.SC.Close()
+						})
 					}
-
-					id := "1"
-					title := "test title"
-					content := "test content"
-
-					msg := client.Msg{
-						MsgID: id, Title: title, Content: content}
-					payload, _ := json.Marshal(msg)
-					pushID := qserver.GetPushID()
-
-					qserver.WalkConn(0, func(w qrpc.FrameWriter, ci *qrpc.ConnectionInfo) bool {
-						w.StartWrite(pushID, server.ForwardCmd, qrpc.PushFlag)
-						w.WriteBytes(payload)
-						w.EndWrite()
-						return true
-					})
 
 					runtime.GC()
 					io.WriteString(w, "ok\n")
