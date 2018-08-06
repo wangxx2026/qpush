@@ -101,7 +101,7 @@ func handleMsg() {
 				conn := conns[addr]
 				_, resp, err := conn.Request(server.PushCmd, qrpc.NBFlag, d.Body)
 				if err != nil {
-					logger.Error(uuid, "Request err", err)
+					logger.Error(uuid, addr, "Request err", err)
 					return
 				}
 
@@ -110,11 +110,11 @@ func handleMsg() {
 					frame := resp.GetFrame()
 					logger.Debug("after GetFrame")
 					if frame == nil {
-						logger.Error(uuid, "GetFrame nil", addr)
+						logger.Error(uuid, addr, "GetFrame nil", addr)
 						atomic.StoreInt32(&failed, 1)
 						return
 					}
-					logger.Info(uuid, "push resp", string(frame.Payload))
+					logger.Info(uuid, addr, "push resp", string(frame.Payload))
 				})
 			}
 			go func() {
