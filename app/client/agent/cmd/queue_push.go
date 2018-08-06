@@ -76,15 +76,6 @@ func initconnect(conns map[string]*qrpc.Connection) {
 	}
 }
 
-func reconnect(conns map[string]*qrpc.Connection) {
-	for k, conn := range conns {
-		conn.Close(nil)
-		delete(conns, k)
-	}
-
-	initconnect(conns)
-}
-
 func handleMsg() {
 
 	defer cancelFunc()
@@ -95,7 +86,6 @@ func handleMsg() {
 	for {
 		select {
 		case d := <-msgCh:
-
 			select {
 			case <-ctx.Done():
 				return
@@ -104,16 +94,15 @@ func handleMsg() {
 			uuid := qrpc.PoorManUUID()
 			logger.Info(uuid, string(d.Body))
 
-		one_msg:
 			msgwg := sync.WaitGroup{}
 			failed := int32(0)
 			for _, serverAddr := range conf.Servers {
-				conn := conns[serverAddr]
+				addr := serverAddr
+				conn := conns[addr]
 				_, resp, err := conn.Request(server.PushCmd, qrpc.NBFlag, d.Body)
 				if err != nil {
-					logger.Error(uuid, "Request", err, "reconnect")
-					reconnect(conns)
-					goto one_msg
+					logger.Error(uuid, "Request err", err)
+					return
 				}
 
 				qrpc.GoFunc(&msgwg, func() {
@@ -121,29 +110,31 @@ func handleMsg() {
 					frame := resp.GetFrame()
 					logger.Debug("after GetFrame")
 					if frame == nil {
-						logger.Error(uuid, "GetFrame nil")
+						logger.Error(uuid, "GetFrame nil", addr)
 						atomic.StoreInt32(&failed, 1)
 						return
 					}
 					logger.Info(uuid, "push resp", string(frame.Payload))
 				})
 			}
-			logger.Debug("before msgwg wait")
-			msgwg.Wait()
-			logger.Debug("after msgwg wait")
-			if failed != 0 {
-				logger.Error(uuid, "resp fail, reconnect")
-				reconnect(conns)
-				goto one_msg
-			}
+			go func() {
+				logger.Debug("before msgwg wait")
+				msgwg.Wait()
+				logger.Debug("after msgwg wait")
+				if atomic.LoadInt32(&failed) != 0 {
+					logger.Error(uuid, "resp fail")
+					cancelFunc()
+					return
+				}
 
-			err := d.Ack(false)
-			if err == nil {
-				logger.Info(uuid, "done")
-			} else {
-				logger.Info(uuid, "ack error", err, "quit")
-				cancelFunc()
-			}
+				err := d.Ack(false)
+				if err == nil {
+					logger.Info(uuid, "done")
+				} else {
+					logger.Info(uuid, "ack error", err, "quit")
+					cancelFunc()
+				}
+			}()
 
 		case <-ctx.Done():
 			return
