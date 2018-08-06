@@ -23,7 +23,7 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 	var pushCmd client.PushCmd
 	err := json.Unmarshal(frame.Payload, &pushCmd)
 	if err != nil {
-		logger.Error("failed to unmarshal PushCmd")
+		logger.Error("failed to unmarshal PushCmd", string(frame.Payload))
 		frame.Close()
 		return
 	}
