@@ -72,7 +72,7 @@ var execCmd = &cobra.Command{
 				// fmt.Printf("called")
 				os.Stdout.Write(nextFrame.Payload)
 			} else {
-				conn.Close(nil)
+				conn.Close()
 				// fmt.Println("Close")
 				break
 			}
