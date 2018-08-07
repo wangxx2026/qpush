@@ -19,15 +19,12 @@ import (
 // this file implements scheduled push service
 
 var (
-	env             string
-	conf            *config.Value
-	msgCh           = make(chan *amqp.Delivery)
-	ctx, cancelFunc = context.WithCancel(context.Background())
+	env  string
+	conf *config.Value
 )
 
 const (
 	prefetchCount = 100
-	pushTimeout   = 30
 )
 
 var queuePushCmd = &cobra.Command{
@@ -35,36 +32,25 @@ var queuePushCmd = &cobra.Command{
 	Short: "get messages to send and push to server",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		defer cancelFunc()
-
 		initConfig()
 
-		msgs := getMsgs()
-		go handleMsg()
+		for i := 0; i < 10; i++ {
+			logger.Info("Round", i)
+			msgCh := make(chan *amqp.Delivery)
+			ctx, cancelFunc := context.WithCancel(context.Background())
+			var wg sync.WaitGroup
 
-		for {
-			select {
-			case msg, ok := <-msgs:
+			qrpc.GoFunc(&wg, func() {
+				handleMQ(ctx, cancelFunc, msgCh)
+			})
+			qrpc.GoFunc(&wg, func() {
+				handleMsg(ctx, cancelFunc, msgCh)
+			})
 
-				if !ok {
-					logger.Error("quit for channel close")
-					return
-				}
-
-				msgCh <- &msg
-
-			case <-ctx.Done():
-				return
-			}
-
+			wg.Wait()
 		}
+
 	}}
-
-func getMsgs() <-chan amqp.Delivery {
-
-	return rabbitmq.GetMsgs(conf.RabbitMQ, conf.PushQueue, prefetchCount)
-
-}
 
 func initconnect(conns map[string]*qrpc.Connection) {
 	for _, serverAddr := range conf.Servers {
@@ -76,12 +62,47 @@ func initconnect(conns map[string]*qrpc.Connection) {
 	}
 }
 
-func handleMsg() {
+func closeconns(conns map[string]*qrpc.Connection) {
+	for _, conn := range conns {
+		conn.Close()
+	}
+}
+
+func handleMQ(ctx context.Context, cancelFunc context.CancelFunc, msgCh chan *amqp.Delivery) {
+	defer cancelFunc()
+
+	msgs, mqconn := getMsgs()
+	if mqconn == nil {
+		logger.Error("getMsgs fail")
+		return
+	}
+	defer mqconn.Close()
+
+	for {
+		select {
+		case msg, ok := <-msgs:
+
+			if !ok {
+				logger.Error("quit for channel close")
+				return
+			}
+
+			msgCh <- &msg
+
+		case <-ctx.Done():
+			return
+		}
+
+	}
+}
+
+func handleMsg(ctx context.Context, cancelFunc context.CancelFunc, msgCh <-chan *amqp.Delivery) {
 
 	defer cancelFunc()
 
 	conns := make(map[string]*qrpc.Connection)
 	initconnect(conns)
+	defer closeconns(conns)
 
 	for {
 		select {
@@ -143,6 +164,10 @@ func handleMsg() {
 			return
 		}
 	}
+}
+
+func getMsgs() (<-chan amqp.Delivery, *amqp.Connection) {
+	return rabbitmq.GetMsgs(conf.RabbitMQ, conf.PushQueue, prefetchCount)
 }
 
 func initConfig() {

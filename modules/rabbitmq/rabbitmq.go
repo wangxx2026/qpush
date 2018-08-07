@@ -7,17 +7,18 @@ import (
 )
 
 // GetMsgs returns message channel
-func GetMsgs(url string, topic string, prefetchCount int) <-chan amqp.Delivery {
+func GetMsgs(url string, topic string, prefetchCount int) (<-chan amqp.Delivery, *amqp.Connection) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		logger.Error("failed to dial rabbitmq", url, err)
-		return nil
+		return nil, nil
 	}
 
 	ch, err := conn.Channel()
 	if err != nil {
+		conn.Close()
 		logger.Error("failed to open rabbitmq channel", err)
-		return nil
+		return nil, nil
 	}
 	q, err := ch.QueueDeclare(
 		topic, // name
@@ -28,8 +29,9 @@ func GetMsgs(url string, topic string, prefetchCount int) <-chan amqp.Delivery {
 		nil,   // arguments
 	)
 	if err != nil {
+		conn.Close()
 		logger.Error("failed to QueueDeclare", err)
-		return nil
+		return nil, nil
 	}
 	err = ch.Qos(
 		prefetchCount, // prefetch count
@@ -37,8 +39,9 @@ func GetMsgs(url string, topic string, prefetchCount int) <-chan amqp.Delivery {
 		false,         // global
 	)
 	if err != nil {
+		conn.Close()
 		logger.Error("failed to set QoS", err)
-		return nil
+		return nil, nil
 	}
 	msgs, err := ch.Consume(
 		q.Name,  // queue
@@ -49,5 +52,10 @@ func GetMsgs(url string, topic string, prefetchCount int) <-chan amqp.Delivery {
 		false,   // no-wait
 		nil,     // args
 	)
-	return msgs
+	if err != nil {
+		conn.Close()
+		logger.Error("failed to call ch.Consume", err)
+		return nil, nil
+	}
+	return msgs, conn
 }
