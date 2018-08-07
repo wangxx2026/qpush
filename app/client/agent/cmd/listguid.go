@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"qpush/modules/logger"
+	"qpush/pkg/logger"
 	"qpush/server"
 
 	"github.com/spf13/cobra"

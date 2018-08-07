@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"qpush/client"
-	"qpush/modules/logger"
+	"qpush/pkg/logger"
 	"qpush/server"
 	"strconv"
 

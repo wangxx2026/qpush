@@ -25,7 +25,7 @@ const (
 
 // Load init conf for environment
 func Load(env string) (*Value, error) {
-	err := DecodeTOMLFile("modules/config/"+env+".toml", &config)
+	err := DecodeTOMLFile("pkg/config/"+env+".toml", &config)
 	if err != nil {
 		return nil, err
 	}

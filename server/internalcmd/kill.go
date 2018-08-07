@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"qpush/client"
-	"qpush/modules/logger"
+	"qpush/pkg/logger"
 	"qpush/server"
 
 	"github.com/zhiqiangxu/qrpc"

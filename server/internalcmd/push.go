@@ -3,7 +3,7 @@ package internalcmd
 import (
 	"encoding/json"
 	"qpush/client"
-	"qpush/modules/logger"
+	"qpush/pkg/logger"
 	"qpush/server"
 	"sync"
 	"sync/atomic"

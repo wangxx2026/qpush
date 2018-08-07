@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"qpush/client"
-	"qpush/modules/logger"
+	"qpush/pkg/logger"
 	"qpush/server"
 
 	"github.com/spf13/cobra"

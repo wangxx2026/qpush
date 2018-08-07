@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 	"qpush/client"
-	"qpush/modules/logger"
+	"qpush/pkg/logger"
 	"qpush/server"
 	"qpush/server/internalcmd"
 

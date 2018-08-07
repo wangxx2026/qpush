@@ -3,7 +3,7 @@ package http
 import (
 	"fmt"
 	"os"
-	"qpush/modules/config"
+	"qpush/pkg/config"
 	"testing"
 )
 

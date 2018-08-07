@@ -1,7 +1,7 @@
 package rabbitmq
 
 import (
-	"qpush/modules/logger"
+	"qpush/pkg/logger"
 
 	"github.com/streadway/amqp"
 )

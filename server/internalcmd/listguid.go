@@ -1,7 +1,7 @@
 package internalcmd
 
 import (
-	"qpush/modules/logger"
+	"qpush/pkg/logger"
 	"qpush/server"
 
 	"github.com/zhiqiangxu/qrpc"

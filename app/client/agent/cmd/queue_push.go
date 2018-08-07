@@ -3,9 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"qpush/modules/config"
-	"qpush/modules/logger"
-	"qpush/modules/rabbitmq"
+	"qpush/pkg/config"
+	"qpush/pkg/logger"
+	"qpush/pkg/rabbitmq"
 	"qpush/server"
 	"sync"
 	"sync/atomic"

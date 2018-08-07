@@ -8,7 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"qpush/modules/config"
+	"qpush/pkg/config"
 	"strings"
 	"time"
 )

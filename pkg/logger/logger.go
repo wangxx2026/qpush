@@ -3,7 +3,7 @@ package logger
 import (
 	"fmt"
 	"os"
-	"qpush/modules/config"
+	"qpush/pkg/config"
 	"time"
 
 	"github.com/zhiqiangxu/qrpc"

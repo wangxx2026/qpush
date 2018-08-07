@@ -6,8 +6,8 @@ import (
 	"io"
 	"os/exec"
 	"qpush/client"
-	"qpush/modules/logger"
-	"qpush/modules/util"
+	"qpush/pkg/logger"
+	"qpush/pkg/util"
 	"qpush/server"
 	"sync"
 

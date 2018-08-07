@@ -2,7 +2,7 @@ package client
 
 import (
 	"encoding/json"
-	"qpush/modules/logger"
+	"qpush/pkg/logger"
 
 	"github.com/zhiqiangxu/qrpc"
 )
