@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	errLoginInValidParam = errors.New("invalid param for Login cmd")
-	errOfflineMsg        = errors.New("invalid offline message")
+	// ErrLoginInValidParam when invalid param
+	ErrLoginInValidParam = errors.New("invalid param for Login cmd")
 )
 
 const (
@@ -59,7 +59,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	loginCmd := client.LoginCmd{}
 	err := json.Unmarshal(frame.Payload, &loginCmd)
 	if err != nil {
-		logger.Error(errLoginInValidParam, string(frame.Payload))
+		logger.Error(ErrLoginInValidParam, string(frame.Payload))
 		frame.Close()
 		return
 	}
