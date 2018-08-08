@@ -33,7 +33,10 @@ var killCmd = &cobra.Command{
 			panic(err)
 		}
 
-		frame := resp.GetFrame()
+		frame, err := resp.GetFrame()
+		if err != nil {
+			panic(err)
+		}
 
 		logger.Info("result", string(frame.Payload))
 	}}

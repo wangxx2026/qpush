@@ -34,9 +34,9 @@ var pushCmd = &cobra.Command{
 			logger.Error("Request failed:", err)
 			return
 		}
-		frame := resp.GetFrame()
-		if frame == nil {
-			logger.Error("GetFrame failed: nil")
+		frame, err := resp.GetFrame()
+		if err != nil {
+			logger.Error("GetFrame failed", err)
 			return
 		}
 

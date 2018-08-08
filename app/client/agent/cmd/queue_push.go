@@ -128,10 +128,10 @@ func handleMsg(ctx context.Context, cancelFunc context.CancelFunc, msgCh <-chan 
 
 				qrpc.GoFunc(&msgwg, func() {
 					logger.Debug("before GetFrame")
-					frame := resp.GetFrame()
+					frame, err := resp.GetFrame()
 					logger.Debug("after GetFrame")
-					if frame == nil {
-						logger.Error(uuid, addr, "GetFrame nil", addr)
+					if err != nil {
+						logger.Error(uuid, addr, "GetFrame fail", addr)
 						atomic.StoreInt32(&failed, 1)
 						return
 					}

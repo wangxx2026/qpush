@@ -55,7 +55,11 @@ var execCmd = &cobra.Command{
 			logger.Error("EndWrite failed:", err)
 			return
 		}
-		frame := resp.GetFrame()
+		frame, err := resp.GetFrame()
+		if err != nil {
+			logger.Error("GetFrame", err)
+			return
+		}
 		// Set stdin in raw mode.
 		oldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
 		if err != nil {

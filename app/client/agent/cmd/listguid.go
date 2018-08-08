@@ -20,7 +20,10 @@ var listGUIDCmd = &cobra.Command{
 		}
 
 		_, resp, err := conn.Request(server.ListGUIDCmd, 0, nil)
-		frame := resp.GetFrame()
+		frame, err := resp.GetFrame()
+		if err != nil {
+			panic(err)
+		}
 
 		logger.Info("result", string(frame.Payload))
 	}}

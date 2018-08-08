@@ -39,10 +39,10 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			if frame := resp.GetFrame(); frame != nil {
-				fmt.Printf("login resp:%s\n", frame.Payload)
-			} else {
+			if frame, err := resp.GetFrame(); err != nil {
 				panic("login failed")
+			} else {
+				fmt.Printf("login resp:%s\n", frame.Payload)
 			}
 
 			go func() {
@@ -52,7 +52,11 @@ func main() {
 					if err != nil {
 						panic(err)
 					}
-					fmt.Printf("hearbeat resp:%v\n", resp.GetFrame().Payload)
+					frame, err := resp.GetFrame()
+					if err != nil {
+						return
+					}
+					fmt.Printf("hearbeat resp:%v\n", frame.Payload)
 				}
 			}()
 			conn.Wait()
