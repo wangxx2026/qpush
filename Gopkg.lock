@@ -105,13 +105,13 @@
   branch = "master"
   name = "github.com/zhiqiangxu/qrpc"
   packages = ["."]
-  revision = "9ec77af5ec5c74eff9f4061d328bcabe10c60272"
+  revision = "34a9854e00ec5f9c8ef9934f08d80a4f36568d82"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "f027049dab0ad238e394a753dba2d14753473a04"
+  revision = "de0752318171da717af4ce24d0a2e8626afaeb11"
 
 [[projects]]
   branch = "master"
@@ -120,7 +120,7 @@
     "unix",
     "windows"
   ]
-  revision = "acbc56fc7007d2a01796d5bde54f39e3b3e95945"
+  revision = "904bdc257025c7b3f43c19360ad3ab85783fad78"
 
 [solve-meta]
   analyzer-name = "dep"
