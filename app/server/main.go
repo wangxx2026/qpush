@@ -84,6 +84,7 @@ func main() {
 			internalHandler.Handle(server.ListGUIDCmd, &internalcmd.ListGUIDCmd{})
 			internalHandler.Handle(server.ExecCmd, &internalcmd.ExecCmd{})
 			internalHandler.Handle(server.KillCmd, &internalcmd.KillCmd{})
+			internalHandler.Handle(server.RelayCmd, &internalcmd.RelayCmd{})
 
 			bindings := []qrpc.ServerBinding{
 				qrpc.ServerBinding{Addr: publicAddr, Handler: handler, DefaultReadTimeout: 10 /*second*/, LatencyMetric: summaryMetric},
