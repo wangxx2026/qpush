@@ -82,7 +82,10 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 	qserver.WalkConn(0, func(writer qrpc.FrameWriter, ci *qrpc.ConnectionInfo) bool {
 		logger.Debug(*ci, ci.SC.GetID())
 
-		deviceInfo := ci.Anything.(*server.DeviceInfo)
+		deviceInfo, ok := ci.Anything.(*server.DeviceInfo)
+		if !ok {
+			return true
+		}
 		// filter by os
 		if pushCmd.OS != "" {
 			if pushCmd.OS != deviceInfo.OS {
