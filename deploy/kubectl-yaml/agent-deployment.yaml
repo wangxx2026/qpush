@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: qpush-agent-deployment
   labels:
-    app: push-go
+    app: qpush-agent
 spec:
   selector:
     matchLabels:

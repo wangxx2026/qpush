@@ -11,6 +11,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"net/http"
+	_ "net/http/pprof"
+
 	"github.com/spf13/cobra"
 	"github.com/streadway/amqp"
 	"github.com/zhiqiangxu/qrpc"
@@ -33,6 +36,10 @@ var queuePushCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		initConfig()
+
+		srv := &http.Server{Addr: "0.0.0.0:8081"}
+		go srv.ListenAndServe()
+		defer srv.Close()
 
 		for i := 0; i < 10; i++ {
 			logger.Info("Round", i)

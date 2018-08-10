@@ -1,11 +1,11 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: push-go-service
+  name: qpush-agent
 spec:
   type: LoadBalancer
   selector:
-    app: push-
+    app: qpush-agent
   ports:
   - name: internel
     protocol: TCP
