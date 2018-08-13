@@ -9,8 +9,11 @@ import (
 
 // API for non blocking roundtrip calls
 type API interface {
+	// call random endpoint
 	Call(ctx context.Context, cmd qrpc.Cmd, payload interface{}, result interface{}) error
+	// call specified endpoint
 	CallOne(ctx context.Context, endpoint string, cmd qrpc.Cmd, payload interface{}, result interface{}) error
+	// call all endpoint
 	CallAll(ctx context.Context, cmd qrpc.Cmd, payload interface{}) (map[string]*qrpc.APIResult, error)
 }
 
