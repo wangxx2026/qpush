@@ -9,6 +9,7 @@ import (
 	"qpush/server"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/go-kit/kit/metrics"
 	"github.com/zhiqiangxu/qrpc"
@@ -64,7 +65,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 		return
 	}
 
-	deviceInfo := &server.DeviceInfo{GUID: loginCmd.GUID, AppID: loginCmd.AppID}
+	deviceInfo := &server.DeviceInfo{Uptime: time.Now(), GUID: loginCmd.GUID, AppID: loginCmd.AppID}
 
 	logger.Debug("test2")
 

@@ -16,9 +16,12 @@ func (cmd *ListGUIDCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFr
 
 	logger.Debug("ListGUIDCmd called")
 	qserver := frame.ConnectionInfo().SC.Server()
-	var result []string
+	var result []server.DeviceInfo
 	qserver.WalkConn(0, func(w qrpc.FrameWriter, ci *qrpc.ConnectionInfo) bool {
-		result = append(result, ci.SC.GetID())
+		if ci.Anything != nil {
+			result = append(result, *ci.Anything.(*server.DeviceInfo))
+		}
+
 		return true
 	})
 
@@ -26,7 +29,7 @@ func (cmd *ListGUIDCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFr
 
 }
 
-func (cmd *ListGUIDCmd) writeResp(writer qrpc.FrameWriter, frame *qrpc.RequestFrame, result []string) {
+func (cmd *ListGUIDCmd) writeResp(writer qrpc.FrameWriter, frame *qrpc.RequestFrame, result []server.DeviceInfo) {
 	jsonwriter := server.JSONFrameWriter{FrameWriter: writer}
 
 	jsonwriter.StartWrite(frame.RequestID, server.ListGUIDRespCmd, 0)

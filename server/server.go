@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/zhiqiangxu/qrpc"
 )
@@ -72,6 +73,7 @@ const (
 
 // DeviceInfo defines info on connection
 type DeviceInfo struct {
+	Uptime time.Time
 	GUID   string
 	AppID  int
 	CityID int
