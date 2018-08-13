@@ -69,6 +69,10 @@ const (
 	RelayCmd
 	// RelayRespCmd is resp for RelayCmd
 	RelayRespCmd
+	// CheckGUIDCmd for checkguid
+	CheckGUIDCmd
+	// CheckGUIDRespCmd is resp for CheckGUIDCmd
+	CheckGUIDRespCmd
 )
 
 // DeviceInfo defines info on connection

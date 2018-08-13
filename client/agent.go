@@ -34,3 +34,9 @@ type ExecCmd struct {
 type ExecRespCmd struct {
 	Err string
 }
+
+// CheckGUIDCmd is struct for checkguid
+type CheckGUIDCmd struct {
+	GUID  string `json:"guid"`
+	AppID int    `json:"app_id"`
+}
