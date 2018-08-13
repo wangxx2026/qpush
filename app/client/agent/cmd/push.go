@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	"context"
 	"qpush/client"
 	"qpush/pkg/logger"
 	"qpush/server"
@@ -20,24 +20,11 @@ var pushCmd = &cobra.Command{
 		title := args[2]
 		content := args[3]
 
-		conn, err := client.NewConnection(internalAddress, qrpc.ConnectionConfig{}, func(conn *client.Connection, frame *qrpc.Frame) {
-			fmt.Println("pushed", string(frame.Payload))
-		})
-		if err != nil {
-			logger.Error("NewConnection fail", err)
-			return
-		}
-
+		api := client.NewAPI([]string{internalAddress}, qrpc.ConnectionConfig{}, nil)
 		pushCmd := client.PushCmd{Msg: client.Msg{MsgID: msgID, Title: title, Content: content}}
-		_, resp, err := conn.Request(server.PushCmd, 0, pushCmd)
+		frame, err := api.CallForFrame(context.Background(), server.PushCmd, pushCmd)
 		if err != nil {
-			logger.Error("Request failed:", err)
-			return
-		}
-		frame, err := resp.GetFrame()
-		if err != nil {
-			logger.Error("GetFrame failed", err)
-			return
+			panic(err)
 		}
 
 		logger.Info("result", string(frame.Payload))

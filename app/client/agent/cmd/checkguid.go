@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"qpush/client"
 	"qpush/pkg/logger"
 	"qpush/server"
@@ -22,18 +23,10 @@ var checkGUIDCmd = &cobra.Command{
 			return
 		}
 		guid := args[2]
-		conn, err := client.NewConnection(internalAddress, qrpc.ConnectionConfig{}, nil)
-		if err != nil {
-			panic(err)
-		}
 
 		cmdInfo := client.CheckGUIDCmd{AppID: appid, GUID: guid}
-		_, resp, err := conn.Request(server.CheckGUIDCmd, 0, cmdInfo)
-		if err != nil {
-			panic(err)
-		}
-
-		frame, err := resp.GetFrame()
+		api := client.NewAPI([]string{internalAddress}, qrpc.ConnectionConfig{}, nil)
+		frame, err := api.CallForFrame(context.Background(), server.CheckGUIDCmd, cmdInfo)
 		if err != nil {
 			panic(err)
 		}

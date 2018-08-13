@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"qpush/pkg/logger"
 	"qpush/server"
 
@@ -14,13 +15,9 @@ var listGUIDCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		internalAddress := args[0]
-		conn, err := qrpc.NewConnection(internalAddress, qrpc.ConnectionConfig{}, nil)
-		if err != nil {
-			panic(err)
-		}
 
-		_, resp, err := conn.Request(server.ListGUIDCmd, 0, nil)
-		frame, err := resp.GetFrame()
+		api := qrpc.NewAPI([]string{internalAddress}, qrpc.ConnectionConfig{}, nil)
+		frame, err := api.Call(context.Background(), server.ListGUIDCmd, nil)
 		if err != nil {
 			panic(err)
 		}
