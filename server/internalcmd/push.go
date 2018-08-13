@@ -61,6 +61,7 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 				w.WriteBytes(bytes)
 				err := w.EndWrite()
 				if err == nil {
+					logger.Info("send ok", msg.MsgID, ci.SC.GetID())
 					atomic.AddUint64(&count, 1)
 				}
 			})
@@ -105,6 +106,7 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 			writer.WriteBytes(bytes)
 			err := writer.EndWrite()
 			if err == nil {
+				logger.Info("send ok", msg.MsgID, ci.SC.GetID())
 				atomic.AddUint64(&count, 1)
 			}
 		})
