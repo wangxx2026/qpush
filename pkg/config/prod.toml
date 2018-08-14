@@ -1,3 +1,13 @@
 Env = "prod"
 
+Ak = "2ad2ae6d-142d-433d-b9b4-2f51e84f4475"
+
+Sk = "bea2c365-75f8-411b-b278-0782244b02d4"
+
 GwHost = "gw.d.ywopt.com"
+
+Servers = ["106.14.50.182:8890"]
+
+RabbitMQ = "amqp://rabbitmq:5ugPeOB4@47.101.32.49:5672"
+
+PushQueue = "push-queue"
