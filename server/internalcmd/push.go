@@ -91,8 +91,9 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 
 	qserver.WalkConn(0, func(writer qrpc.FrameWriter, ci *qrpc.ConnectionInfo) bool {
 
-		deviceInfo, ok := ci.Anything.(*server.DeviceInfo)
-		if !ok {
+		anything := ci.GetAnything()
+		deviceInfo, ok := anything.(*server.DeviceInfo)
+		if !ok { // anything is nil in this case
 			return true
 		}
 		// filter by os

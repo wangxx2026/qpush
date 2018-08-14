@@ -18,8 +18,9 @@ func (cmd *ListGUIDCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFr
 	qserver := frame.ConnectionInfo().SC.Server()
 	var result []interface{}
 	qserver.WalkConn(0, func(w qrpc.FrameWriter, ci *qrpc.ConnectionInfo) bool {
-		if ci.Anything != nil {
-			result = append(result, ci.Anything)
+		anything := ci.GetAnything()
+		if anything != nil {
+			result = append(result, anything)
 		}
 
 		return true

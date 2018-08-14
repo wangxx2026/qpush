@@ -28,8 +28,9 @@ func (cmd *CheckGUIDCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestF
 	qserver := frame.ConnectionInfo().SC.Server()
 	var result interface{}
 	qserver.WalkConnByID(0, []string{server.GetAppGUID(checkCmd.AppID, checkCmd.GUID)}, func(w qrpc.FrameWriter, ci *qrpc.ConnectionInfo) {
-		if ci.Anything != nil {
-			result = ci.Anything
+		anything := ci.GetAnything()
+		if anything != nil {
+			result = anything
 		}
 	})
 

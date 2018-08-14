@@ -115,7 +115,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	}
 	logger.Debug("test6")
 
-	ci.Anything = deviceInfo
+	ci.SetAnything(deviceInfo)
 
 	cmd.m.Lock()
 	v := cmd.onlineStat[loginCmd.AppID]

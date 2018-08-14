@@ -43,12 +43,8 @@ var (
 func (cmd *AckCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) {
 
 	ci := frame.ConnectionInfo()
-	if ci.Anything == nil {
-		logger.Error(errAckNoGUID)
-		frame.Close()
-		return
-	}
-	deviceInfo, ok := ci.Anything.(*server.DeviceInfo)
+	anything := ci.GetAnything()
+	deviceInfo, ok := anything.(*server.DeviceInfo)
 	if !ok {
 		logger.Error("failed to cast DeviceInfo\n")
 		frame.Close()
