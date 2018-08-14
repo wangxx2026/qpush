@@ -125,7 +125,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	labels := []string{"appid", strconv.Itoa(loginCmd.AppID), "kind", "online"}
 	cmd.gaugeMetric.With(labels...).Set(float64(v + 1))
 
-	serveconn.NotifyWhenClose(func() {
+	ci.NotifyWhenClose(func() {
 		cmd.m.Lock()
 		v := cmd.onlineStat[loginCmd.AppID]
 		if v > 0 {
