@@ -3,10 +3,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"qpush/pkg/config"
 	"qpush/pkg/logger"
 	"qpush/pkg/rabbitmq"
 	"qpush/server"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -38,6 +40,14 @@ var queuePushCmd = &cobra.Command{
 		initConfig()
 
 		srv := &http.Server{Addr: "0.0.0.0:8081"}
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case "/gc":
+				runtime.GC()
+				io.WriteString(w, "gc ok\n")
+				return
+			}
+		})
 		go srv.ListenAndServe()
 		defer srv.Close()
 
