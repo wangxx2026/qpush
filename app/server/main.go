@@ -98,6 +98,13 @@ func main() {
 				http.Handle("/metrics", promhttp.Handler())
 				http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
+					switch r.URL.Path {
+					case "/gc":
+						runtime.GC()
+						io.WriteString(w, "gc ok\n")
+						return
+					}
+
 					if config.Get().Env == config.ProdEnv {
 						return
 					}
