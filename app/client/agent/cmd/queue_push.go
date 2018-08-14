@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"net/http"
+	// enable pprof for queue_push
 	_ "net/http/pprof"
 
 	"github.com/spf13/cobra"
