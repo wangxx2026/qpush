@@ -15,6 +15,11 @@ import (
 type PushCmd struct {
 }
 
+type pushResp struct {
+	OK uint64
+	NG uint64
+}
+
 // ServeQRPC implements qrpc.Handler
 func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) {
 
@@ -39,8 +44,9 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 	}
 
 	var (
-		count uint64
-		wg    sync.WaitGroup
+		count   uint64
+		ngcount uint64
+		wg      sync.WaitGroup
 	)
 
 	qserver := frame.ConnectionInfo().SC.Server()
@@ -61,14 +67,17 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 				w.WriteBytes(bytes)
 				err := w.EndWrite()
 				if err == nil {
-					logger.Info("send ok", msg.MsgID, ci.SC.GetID())
+					logger.Info("send ok", msg.MsgID, ci.GetID())
 					atomic.AddUint64(&count, 1)
+				} else {
+					logger.Info("send ng", msg.MsgID, ci.GetID())
+					atomic.AddUint64(&ngcount, 1)
 				}
 			})
 		})
 		wg.Wait()
 
-		cmd.writeResp(writer, frame, atomic.LoadUint64(&count))
+		cmd.writeResp(writer, frame, &pushResp{OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount)})
 		return
 	}
 
@@ -81,7 +90,6 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 	}
 
 	qserver.WalkConn(0, func(writer qrpc.FrameWriter, ci *qrpc.ConnectionInfo) bool {
-		logger.Debug(*ci, ci.SC.GetID())
 
 		deviceInfo, ok := ci.Anything.(*server.DeviceInfo)
 		if !ok {
@@ -106,22 +114,25 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 			writer.WriteBytes(bytes)
 			err := writer.EndWrite()
 			if err == nil {
-				logger.Info("send ok", msg.MsgID, ci.SC.GetID())
+				logger.Info("send ok", msg.MsgID, ci.GetID())
 				atomic.AddUint64(&count, 1)
+			} else {
+				logger.Info("send ng", msg.MsgID, ci.GetID())
+				atomic.AddUint64(&ngcount, 1)
 			}
 		})
 		return true
 	})
 	wg.Wait()
 
-	cmd.writeResp(writer, frame, count)
+	cmd.writeResp(writer, frame, &pushResp{OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount)})
 }
 
-func (cmd *PushCmd) writeResp(writer qrpc.FrameWriter, frame *qrpc.RequestFrame, count uint64) {
+func (cmd *PushCmd) writeResp(writer qrpc.FrameWriter, frame *qrpc.RequestFrame, result *pushResp) {
 	jsonwriter := server.JSONFrameWriter{FrameWriter: writer}
 
 	jsonwriter.StartWrite(frame.RequestID, server.PushRespCmd, 0)
-	jsonwriter.WriteJSON(count)
+	jsonwriter.WriteJSON(result)
 	err := jsonwriter.EndWrite()
 	if err != nil {
 		logger.Error("EndWrite fail", err)
