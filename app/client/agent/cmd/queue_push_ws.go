@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"html/template"
 	"log"
 	"net/http"
@@ -37,8 +38,19 @@ func wslogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	go func() {
+		for {
+			_, _, err := c.ReadMessage()
+			if _, ok := err.(*websocket.CloseError); ok {
+				cancelFunc()
+				return
+			}
+		}
+	}()
 	for {
-		for line := range t.Lines {
+		select {
+		case line := <-t.Lines:
 			if line == nil {
 				return
 			}
@@ -47,7 +59,10 @@ func wslogs(w http.ResponseWriter, r *http.Request) {
 				logger.Error("WriteMessage:", err)
 				return
 			}
+		case <-ctx.Done():
+			return
 		}
+
 	}
 }
 
