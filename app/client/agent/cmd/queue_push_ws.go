@@ -1,15 +1,12 @@
 package cmd
 
 import (
-	"context"
 	"html/template"
 	"log"
 	"net/http"
-	"os"
-	"qpush/pkg/logger"
+	"qpush/pkg/tail"
 
 	"github.com/gorilla/websocket"
-	"github.com/hpcloud/tail"
 )
 
 func logs(w http.ResponseWriter, r *http.Request) {
@@ -26,44 +23,7 @@ func wslogs(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 
-	t, err := tail.TailFile(conf.QPTailFile, tail.Config{Follow: true, MustExist: true, Location: &tail.SeekInfo{Offset: -500, Whence: os.SEEK_END}})
-	if t != nil {
-		defer t.Kill(nil)
-	}
-	if err != nil {
-		err = c.WriteMessage(websocket.TextMessage, []byte(err.Error()))
-		if err != nil {
-			logger.Error("WriteMessage:", err)
-		}
-		return
-	}
-
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	go func() {
-		for {
-			_, _, err := c.ReadMessage()
-			if _, ok := err.(*websocket.CloseError); ok {
-				cancelFunc()
-				return
-			}
-		}
-	}()
-	for {
-		select {
-		case line := <-t.Lines:
-			if line == nil {
-				return
-			}
-			err = c.WriteMessage(websocket.TextMessage, []byte(line.Text))
-			if err != nil {
-				logger.Error("WriteMessage:", err)
-				return
-			}
-		case <-ctx.Done():
-			return
-		}
-
-	}
+	tail.Push2WS(c, conf.QPTailFile, 5)
 }
 
 var homeTemplate = template.Must(template.New("").Parse(`
