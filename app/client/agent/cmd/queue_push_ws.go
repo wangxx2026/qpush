@@ -26,7 +26,7 @@ func wslogs(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 
-	t, err := tail.TailFile(conf.QPTailFile, tail.Config{Follow: true, MustExist: true, Location: &tail.SeekInfo{Whence: os.SEEK_CUR}})
+	t, err := tail.TailFile(conf.QPTailFile, tail.Config{Follow: true, MustExist: true, Location: &tail.SeekInfo{Whence: os.SEEK_END}})
 	if t != nil {
 		defer t.Kill(nil)
 	}
