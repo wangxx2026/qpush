@@ -32,8 +32,8 @@ func wslogs(w http.ResponseWriter, r *http.Request) {
 		err = c.WriteMessage(websocket.TextMessage, []byte(err.Error()))
 		if err != nil {
 			logger.Error("WriteMessage:", err)
-			return
 		}
+		return
 	}
 
 	for {

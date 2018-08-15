@@ -25,6 +25,10 @@
 #   unused-packages = true
 
 
+[[override]]
+  source = "https://github.com/fsnotify/fsnotify.git"
+  name = "gopkg.in/fsnotify.v1"
+
 [[constraint]]
   name = "github.com/BurntSushi/toml"
   version = "0.3.0"
