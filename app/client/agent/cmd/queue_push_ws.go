@@ -23,10 +23,8 @@ func wslogs(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 
-	err = tail.Push2WS(c, conf.QPTailFile, 5)
-	if err != nil {
-		logger.Error("Push2WS:", err)
-	}
+	tail.Push2WS(c, conf.QPTailFile, 5)
+
 }
 
 var homeTemplate = template.Must(template.New("").Parse(`
