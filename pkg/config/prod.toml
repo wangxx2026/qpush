@@ -11,3 +11,5 @@ Servers = ["192.168.218.199:8890","192.168.218.200:8890"]
 RabbitMQ = "amqp://rabbitmq:5ugPeOB4@192.168.218.198:5672"
 
 PushQueue = "push-queue"
+
+QPTailFile = "/home/work/qpush-agent/log/qpush.log"

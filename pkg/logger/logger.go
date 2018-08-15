@@ -21,7 +21,9 @@ func Info(msg ...interface{}) {
 
 // Error prints to stderr
 func Error(msg ...interface{}) {
-	fmt.Fprint(os.Stderr, time.Now().String(), SEP, fmt.Sprintln(msg...))
+	now := time.Now().String()
+	fmt.Fprint(os.Stdout, now, SEP, fmt.Sprintln(msg...))
+	fmt.Fprint(os.Stderr, now, SEP, fmt.Sprintln(msg...))
 }
 
 // Debug prints to stderr

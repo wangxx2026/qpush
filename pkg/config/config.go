@@ -2,14 +2,15 @@ package config
 
 // Value contains all config info
 type Value struct {
-	Env       string
-	Ak        string
-	Sk        string
-	GwHost    string
-	RedisAddr string
-	Servers   []string
-	RabbitMQ  string
-	PushQueue string
+	Env        string
+	Ak         string
+	Sk         string
+	GwHost     string
+	RedisAddr  string
+	Servers    []string
+	RabbitMQ   string
+	PushQueue  string
+	QPTailFile string
 }
 
 var (

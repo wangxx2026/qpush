@@ -49,6 +49,11 @@ var queuePushCmd = &cobra.Command{
 				return
 			}
 		})
+		if conf.QPTailFile != "" {
+			http.HandleFunc("/logs", logs)
+			http.HandleFunc("/wslogs", wslogs)
+		}
+
 		go srv.ListenAndServe()
 		defer srv.Close()
 
