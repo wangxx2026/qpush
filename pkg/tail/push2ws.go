@@ -14,11 +14,13 @@ import (
 func Push2WS(c *websocket.Conn, file string, n int) error {
 
 	tailOffset, err := Line2Offset(file, n)
+	logger.Debug("tailOffset", tailOffset)
 	if err != nil {
+		logger.Error("Line2Offset", err)
 		return err
 	}
 
-	location := &tail.SeekInfo{Offset: -1 * tailOffset, Whence: os.SEEK_END}
+	location := &tail.SeekInfo{Offset: tailOffset, Whence: os.SEEK_SET}
 	t, err := tail.TailFile(file, tail.Config{Follow: true, MustExist: true, Location: location})
 	if t != nil {
 		defer t.Stop()

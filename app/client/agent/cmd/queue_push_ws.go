@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"html/template"
-	"log"
 	"net/http"
+	"qpush/pkg/logger"
 	"qpush/pkg/tail"
 
 	"github.com/gorilla/websocket"
@@ -18,12 +18,15 @@ var upgrader = websocket.Upgrader{} // use default options
 func wslogs(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Print("upgrade:", err)
+		logger.Error("upgrade:", err)
 		return
 	}
 	defer c.Close()
 
-	tail.Push2WS(c, conf.QPTailFile, 5)
+	err = tail.Push2WS(c, conf.QPTailFile, 5)
+	if err != nil {
+		logger.Error("Push2WS:", err)
+	}
 }
 
 var homeTemplate = template.Must(template.New("").Parse(`
