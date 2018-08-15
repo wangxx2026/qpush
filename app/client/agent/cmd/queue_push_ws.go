@@ -70,6 +70,7 @@ window.addEventListener("load", function(evt) {
 	ws.onclose = function(evt) {
 		print("CLOSE");
 		ws = null;
+		alert("ws closed!")
 	}
 	ws.onmessage = function(evt) {
 		print("RESPONSE: " + evt.data);
