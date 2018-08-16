@@ -207,6 +207,7 @@ func handleWriteMQ(ctx context.Context, cancelFunc context.CancelFunc, logCh <-c
 
 	batchCh := make(chan []internalcmd.PushResp)
 	go func() {
+		defer cancelFunc()
 		for {
 			select {
 			case <-ctx.Done():
