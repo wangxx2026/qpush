@@ -1,30 +1,38 @@
-package cmd
+package tail
 
 import (
 	"html/template"
 	"net/http"
 	"qpush/pkg/logger"
-	"qpush/pkg/tail"
 
 	"github.com/gorilla/websocket"
 )
 
-func logs(w http.ResponseWriter, r *http.Request) {
-	homeTemplate.Execute(w, "ws://"+r.Host+"/wslogs")
+// Attach2Http will attach endpoints to ServeMux
+func Attach2Http(mux *http.ServeMux, httpAddr string, wsAddr string, file string) {
+	mux.HandleFunc(httpAddr, func(w http.ResponseWriter, r *http.Request) {
+		httpHandler(w, r, wsAddr)
+	})
+	mux.HandleFunc(wsAddr, func(w http.ResponseWriter, r *http.Request) {
+		wsHandler(w, r, file)
+	})
 }
 
 var upgrader = websocket.Upgrader{} // use default options
 
-func wslogs(w http.ResponseWriter, r *http.Request) {
+func wsHandler(w http.ResponseWriter, r *http.Request, file string) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logger.Error("upgrade:", err)
 		return
 	}
-	defer c.Close()
 
-	tail.Push2WS(c, conf.QPTailFile, 5)
+	// Push2WS will Close c when return
+	Push2WS(c, file, 5)
+}
 
+func httpHandler(w http.ResponseWriter, r *http.Request, wsAddr string) {
+	homeTemplate.Execute(w, "ws://"+r.Host+wsAddr)
 }
 
 var homeTemplate = template.Must(template.New("").Parse(`

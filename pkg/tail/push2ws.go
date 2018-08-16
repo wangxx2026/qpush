@@ -10,8 +10,10 @@ import (
 )
 
 // Push2WS start transfer tail output to ws
-// websocket.Conn can't be used any more after return
+// websocket.Conn will be Closed after return
 func Push2WS(c *websocket.Conn, file string, n int) error {
+
+	defer c.Close()
 
 	tailOffset, err := Line2Offset(file, n)
 	logger.Debug("tailOffset", tailOffset)

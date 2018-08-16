@@ -7,6 +7,7 @@ import (
 	"qpush/pkg/config"
 	"qpush/pkg/logger"
 	"qpush/pkg/rabbitmq"
+	"qpush/pkg/tail"
 	"qpush/server"
 	"runtime"
 	"sync"
@@ -50,8 +51,7 @@ var queuePushCmd = &cobra.Command{
 			}
 		})
 		if conf.QPTailFile != "" {
-			http.HandleFunc("/logs", logs)
-			http.HandleFunc("/wslogs", wslogs)
+			tail.Attach2Http(http.DefaultServeMux, "/logs", "/wslogs", conf.QPTailFile)
 		}
 
 		go srv.ListenAndServe()
