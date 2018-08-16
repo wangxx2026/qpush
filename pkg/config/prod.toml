@@ -14,4 +14,4 @@ PushQueue = "push-queue"
 
 AgentLog = "/home/work/qpush-agent/log/qpush.log"
 
-ServerLog = "/home/work/qpush/qpush.log"
+ServerLog = "/home/work/qpush/log/qpush.log"
