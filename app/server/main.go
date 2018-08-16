@@ -11,6 +11,7 @@ import (
 	"qpush/client"
 	"qpush/pkg/config"
 	"qpush/pkg/logger"
+	"qpush/pkg/tail"
 	"qpush/server"
 	"qpush/server/cmd"
 	"qpush/server/internalcmd"
@@ -96,6 +97,9 @@ func main() {
 			go func() {
 				srv := &http.Server{Addr: "0.0.0.0:8080"}
 				http.Handle("/metrics", promhttp.Handler())
+				if config.Get().ServerLog != "" {
+					tail.Attach2Http(http.DefaultServeMux, "/logs", "/wslogs", config.Get().ServerLog)
+				}
 				http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 					switch r.URL.Path {

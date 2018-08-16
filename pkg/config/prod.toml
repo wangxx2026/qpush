@@ -12,6 +12,6 @@ RabbitMQ = "amqp://rabbitmq:5ugPeOB4@192.168.218.198:5672"
 
 PushQueue = "push-queue"
 
-QPTailFile = "/home/work/qpush-agent/log/qpush.log"
+AgentLog = "/home/work/qpush-agent/log/qpush.log"
 
-QPushTailFile = "/home/work/qpush/qpush.log"
+ServerLog = "/home/work/qpush/qpush.log"

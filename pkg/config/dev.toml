@@ -12,4 +12,4 @@ RabbitMQ = "amqp://rabbitmq:rabbitmq@123@47.100.48.166:5672"
 
 PushQueue = "push-test"
 
-QPTailFile = "/tmp/log"
+AgentLog = "/tmp/log"

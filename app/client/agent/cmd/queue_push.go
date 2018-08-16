@@ -50,8 +50,8 @@ var queuePushCmd = &cobra.Command{
 				return
 			}
 		})
-		if conf.QPTailFile != "" {
-			tail.Attach2Http(http.DefaultServeMux, "/logs", "/wslogs", conf.QPTailFile)
+		if conf.AgentLog != "" {
+			tail.Attach2Http(http.DefaultServeMux, "/logs", "/wslogs", conf.AgentLog)
 		}
 
 		go srv.ListenAndServe()
