@@ -15,7 +15,7 @@ import (
 type PushCmd struct {
 }
 
-type pushResp struct {
+type PushResp struct {
 	OK uint64
 	NG uint64
 }
@@ -77,7 +77,7 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 		})
 		wg.Wait()
 
-		cmd.writeResp(writer, frame, &pushResp{OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount)})
+		cmd.writeResp(writer, frame, &PushResp{OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount)})
 		return
 	}
 
@@ -126,10 +126,10 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 	})
 	wg.Wait()
 
-	cmd.writeResp(writer, frame, &pushResp{OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount)})
+	cmd.writeResp(writer, frame, &PushResp{OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount)})
 }
 
-func (cmd *PushCmd) writeResp(writer qrpc.FrameWriter, frame *qrpc.RequestFrame, result *pushResp) {
+func (cmd *PushCmd) writeResp(writer qrpc.FrameWriter, frame *qrpc.RequestFrame, result *PushResp) {
 	jsonwriter := server.JSONFrameWriter{FrameWriter: writer}
 
 	jsonwriter.StartWrite(frame.RequestID, server.PushRespCmd, 0)

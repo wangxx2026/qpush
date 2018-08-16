@@ -7,7 +7,7 @@ import (
 )
 
 // GetMsgs returns message channel
-func GetMsgs(url string, topic string, prefetchCount int) (<-chan amqp.Delivery, *amqp.Connection) {
+func GetMsgs(url, topic string, prefetchCount int) (<-chan amqp.Delivery, *amqp.Connection) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		logger.Error("failed to dial rabbitmq", url, err)

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"qpush/pkg/config"
@@ -9,6 +10,7 @@ import (
 	"qpush/pkg/rabbitmq"
 	"qpush/pkg/tail"
 	"qpush/server"
+	"qpush/server/internalcmd"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -31,7 +33,8 @@ var (
 )
 
 const (
-	prefetchCount = 100
+	prefetchCount  = 100
+	writeRespBatch = 100
 )
 
 var queuePushCmd = &cobra.Command{
@@ -60,6 +63,7 @@ var queuePushCmd = &cobra.Command{
 		for i := 0; i < 10; i++ {
 			logger.Info("Round", i)
 			msgCh := make(chan *amqp.Delivery)
+			logCh := make(chan []byte)
 			ctx, cancelFunc := context.WithCancel(context.Background())
 			var wg sync.WaitGroup
 
@@ -67,7 +71,10 @@ var queuePushCmd = &cobra.Command{
 				handleMQ(ctx, cancelFunc, msgCh)
 			})
 			qrpc.GoFunc(&wg, func() {
-				handleMsg(ctx, cancelFunc, msgCh)
+				handleMsg(ctx, cancelFunc, msgCh, logCh)
+			})
+			qrpc.GoFunc(&wg, func() {
+				handleWriteMQ(ctx, cancelFunc, logCh)
 			})
 
 			wg.Wait()
@@ -119,7 +126,7 @@ func handleMQ(ctx context.Context, cancelFunc context.CancelFunc, msgCh chan *am
 	}
 }
 
-func handleMsg(ctx context.Context, cancelFunc context.CancelFunc, msgCh <-chan *amqp.Delivery) {
+func handleMsg(ctx context.Context, cancelFunc context.CancelFunc, msgCh <-chan *amqp.Delivery, logCh chan<- []byte) {
 
 	defer cancelFunc()
 
@@ -159,6 +166,11 @@ func handleMsg(ctx context.Context, cancelFunc context.CancelFunc, msgCh <-chan 
 						return
 					}
 					logger.Info(uuid, addr, "push resp", string(frame.Payload))
+					select {
+					case logCh <- frame.Payload:
+					case <-ctx.Done():
+					}
+
 				})
 			}
 			go func() {
@@ -184,6 +196,69 @@ func handleMsg(ctx context.Context, cancelFunc context.CancelFunc, msgCh <-chan 
 			return
 		case <-time.After(time.Second * 50000):
 			fmt.Println("quit for idle")
+			return
+		}
+	}
+}
+
+func handleWriteMQ(ctx context.Context, cancelFunc context.CancelFunc, logCh <-chan []byte) {
+
+	defer cancelFunc()
+
+	batchCh := make(chan []internalcmd.PushResp)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case respes := <-batchCh:
+				bytes, err := json.Marshal(respes)
+				respes = nil
+				if err != nil {
+					logger.Error("marshal respes fail", err)
+					continue
+				}
+				err = rabbitmq.ProduceMsg(conf.RabbitMQ, "push-resp", string(bytes))
+				if err != nil {
+					logger.Error("ProduceMsg fail", err)
+				}
+				logger.Info("push-resp OK", string(bytes))
+			}
+		}
+	}()
+	var respes []internalcmd.PushResp
+
+	for {
+		select {
+		case logBytes := <-logCh:
+			var pushResp internalcmd.PushResp
+			err := json.Unmarshal(logBytes, &pushCmd)
+			if err != nil {
+				logger.Error("PushResp unmarshal fail", err)
+				continue //ignore error
+			}
+			respes = append(respes, pushResp)
+			if len(respes) > writeRespBatch {
+				// TODO fix dup
+				select {
+				case batchCh <- respes:
+				case <-ctx.Done():
+					return
+				}
+				respes = nil
+			}
+
+		case <-time.After(time.Second * 60):
+			if len(respes) > 0 {
+				// TODO fix dup
+				select {
+				case batchCh <- respes:
+				case <-ctx.Done():
+					return
+				}
+				respes = nil
+			}
+		case <-ctx.Done():
 			return
 		}
 	}
