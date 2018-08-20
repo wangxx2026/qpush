@@ -45,10 +45,10 @@ func (l log) Info(msg ...interface{}) {
 	Info(msg...)
 }
 func (l log) Error(msg ...interface{}) {
-	Info(msg...)
+	Error(msg...)
 }
 func (l log) Debug(msg ...interface{}) {
-	Info(msg...)
+	Debug(msg...)
 }
 func init() {
 	qrpc.Logger = log{}
