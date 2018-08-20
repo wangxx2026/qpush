@@ -27,14 +27,15 @@ const (
 
 // LoginCmd do login
 type LoginCmd struct {
-	m           sync.Mutex
-	onlineStat  map[int]int64 //appid -> count
-	gaugeMetric metrics.Gauge
+	m             sync.Mutex
+	onlineStat    map[int]int64 //appid -> count
+	gaugeMetric   metrics.Gauge
+	counterMetric metrics.Counter
 }
 
 // NewLoginCmd returns a LoginCmd instance
-func NewLoginCmd(gaugeMetric metrics.Gauge) *LoginCmd {
-	return &LoginCmd{onlineStat: make(map[int]int64), gaugeMetric: gaugeMetric}
+func NewLoginCmd(gaugeMetric metrics.Gauge, counterMetric metrics.Counter) *LoginCmd {
+	return &LoginCmd{onlineStat: make(map[int]int64), gaugeMetric: gaugeMetric, counterMetric: counterMetric}
 }
 
 // OfflineMsgData is data part
@@ -109,10 +110,17 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	jsonwriter.WriteJSON(result.Data.MsgList)
 	err = jsonwriter.EndWrite()
 	logger.Debug("test5")
+
 	if err != nil {
+		counterNGLabels := []string{"appid", strconv.Itoa(loginCmd.AppID), "kind", "offlineng"}
+		cmd.counterMetric.With(counterNGLabels...).Add(1)
 		logger.Error("EndWrite", err)
 		return
 	}
+
+	counterOKLabels := []string{"appid", strconv.Itoa(loginCmd.AppID), "kind", "offlineok"}
+	cmd.counterMetric.With(counterOKLabels...).Add(1)
+
 	logger.Debug("test6")
 
 	ci.SetAnything(deviceInfo)

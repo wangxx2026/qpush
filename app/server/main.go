@@ -68,6 +68,12 @@ func main() {
 				Name:      "gauge_result",
 				Help:      "The gauge result per app.",
 			}, []string{"appid", "kind"})
+			counterMetric := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+				Namespace: "qpush",
+				Subsystem: "server",
+				Name:      "count_result",
+				Help:      "The counter result per app.",
+			}, []string{"appid", "kind"})
 			summaryMetric := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
 				Namespace: "qpush",
 				Subsystem: "server",
@@ -76,12 +82,12 @@ func main() {
 			}, []string{"method", "error"})
 
 			handler := qrpc.NewServeMux()
-			handler.Handle(server.LoginCmd, cmd.NewLoginCmd(gaugeMetric))
+			handler.Handle(server.LoginCmd, cmd.NewLoginCmd(gaugeMetric, counterMetric))
 			handler.Handle(server.HeartBeatCmd, &cmd.HeartBeatCmd{})
 			handler.Handle(server.AckCmd, cmd.NewAckCmd())
 
 			internalHandler := qrpc.NewServeMux()
-			internalHandler.Handle(server.PushCmd, &internalcmd.PushCmd{})
+			internalHandler.Handle(server.PushCmd, internalcmd.NewPushCmd(counterMetric))
 			internalHandler.Handle(server.ListGUIDCmd, &internalcmd.ListGUIDCmd{})
 			internalHandler.Handle(server.ExecCmd, &internalcmd.ExecCmd{})
 			internalHandler.Handle(server.KillCmd, &internalcmd.KillCmd{})

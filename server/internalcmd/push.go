@@ -5,16 +5,25 @@ import (
 	"qpush/client"
 	"qpush/pkg/logger"
 	"qpush/server"
+	"strconv"
 	"sync"
 	"sync/atomic"
 
+	"github.com/go-kit/kit/metrics"
 	"github.com/zhiqiangxu/qrpc"
 )
 
 // PushCmd do push
 type PushCmd struct {
+	counterMetric metrics.Counter
 }
 
+// NewPushCmd returns a PushCmd instance
+func NewPushCmd(counterMetric metrics.Counter) *PushCmd {
+	return &PushCmd{counterMetric: counterMetric}
+}
+
+// PushResp is resp for PushCmd
 type PushResp struct {
 	OK uint64
 	NG uint64
@@ -60,6 +69,8 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 		}
 
 		logger.Debug("ids", len(ids), ids)
+		counterOKLabels := []string{"appid", strconv.Itoa(pushCmd.AppID), "kind", "pushok"}
+		counterNGLabels := []string{"appid", strconv.Itoa(pushCmd.AppID), "kind", "pushng"}
 		qserver.WalkConnByID(0, ids, func(w qrpc.FrameWriter, ci *qrpc.ConnectionInfo) {
 			logger.Debug("WalkConnByID")
 			qrpc.GoFunc(&wg, func() {
@@ -67,9 +78,11 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 				w.WriteBytes(bytes)
 				err := w.EndWrite()
 				if err == nil {
+					cmd.counterMetric.With(counterOKLabels...).Add(1)
 					logger.Info("send ok", msg.MsgID, ci.GetID())
 					atomic.AddUint64(&count, 1)
 				} else {
+					cmd.counterMetric.With(counterNGLabels...).Add(1)
 					logger.Info("send ng", msg.MsgID, ci.GetID())
 					atomic.AddUint64(&ngcount, 1)
 				}
