@@ -66,14 +66,14 @@ func main() {
 			onlineMetric := kitprometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
 				Namespace: "qpush",
 				Subsystem: "server",
-				Name:      "gauge_result",
+				Name:      "online_count",
 				Help:      "The gauge result per app.",
 			}, []string{"appid", "kind"})
 			// ok|ng count
 			pushCounterMetric := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 				Namespace: "qpush",
 				Subsystem: "server",
-				Name:      "count_result",
+				Name:      "push_count",
 				Help:      "The counter result per app.",
 			}, []string{"appid", "kind"})
 			// qrpc request count
@@ -87,7 +87,7 @@ func main() {
 			requestLatencyMetric := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
 				Namespace: "qpush",
 				Subsystem: "server",
-				Name:      "summary_result",
+				Name:      "request_latency",
 				Help:      "request latency.",
 			}, []string{"method", "error"})
 
