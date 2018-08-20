@@ -63,22 +63,28 @@ func main() {
 			}
 
 			// online count
-			gaugeMetric := kitprometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
+			onlineMetric := kitprometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
 				Namespace: "qpush",
 				Subsystem: "server",
 				Name:      "gauge_result",
 				Help:      "The gauge result per app.",
 			}, []string{"appid", "kind"})
 			// ok|ng count
-			// request count
-			counterMetric := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+			pushCounterMetric := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 				Namespace: "qpush",
 				Subsystem: "server",
 				Name:      "count_result",
 				Help:      "The counter result per app.",
 			}, []string{"appid", "kind"})
-			// latency
-			summaryMetric := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+			// qrpc request count
+			requestCountMetric := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+				Namespace: "qpush",
+				Subsystem: "server",
+				Name:      "request_count",
+				Help:      "The counter result per app.",
+			}, []string{"method", "error"})
+			// qrpc request latency
+			requestLatencyMetric := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
 				Namespace: "qpush",
 				Subsystem: "server",
 				Name:      "summary_result",
@@ -86,12 +92,12 @@ func main() {
 			}, []string{"method", "error"})
 
 			handler := qrpc.NewServeMux()
-			handler.Handle(server.LoginCmd, cmd.NewLoginCmd(gaugeMetric, counterMetric))
+			handler.Handle(server.LoginCmd, cmd.NewLoginCmd(onlineMetric, pushCounterMetric))
 			handler.Handle(server.HeartBeatCmd, &cmd.HeartBeatCmd{})
 			handler.Handle(server.AckCmd, cmd.NewAckCmd())
 
 			internalHandler := qrpc.NewServeMux()
-			internalHandler.Handle(server.PushCmd, internalcmd.NewPushCmd(counterMetric))
+			internalHandler.Handle(server.PushCmd, internalcmd.NewPushCmd(pushCounterMetric))
 			internalHandler.Handle(server.ListGUIDCmd, &internalcmd.ListGUIDCmd{})
 			internalHandler.Handle(server.ExecCmd, &internalcmd.ExecCmd{})
 			internalHandler.Handle(server.KillCmd, &internalcmd.KillCmd{})
@@ -99,8 +105,8 @@ func main() {
 			internalHandler.Handle(server.CheckGUIDCmd, &internalcmd.CheckGUIDCmd{})
 
 			bindings := []qrpc.ServerBinding{
-				qrpc.ServerBinding{Addr: publicAddr, Handler: handler, DefaultReadTimeout: 10 /*second*/, LatencyMetric: summaryMetric, CounterMetric: counterMetric},
-				qrpc.ServerBinding{Addr: internalAddr, Handler: internalHandler, LatencyMetric: summaryMetric, CounterMetric: counterMetric}}
+				qrpc.ServerBinding{Addr: publicAddr, Handler: handler, DefaultReadTimeout: 10 /*second*/, LatencyMetric: requestLatencyMetric, CounterMetric: requestCountMetric},
+				qrpc.ServerBinding{Addr: internalAddr, Handler: internalHandler, LatencyMetric: requestLatencyMetric, CounterMetric: requestCountMetric}}
 
 			qserver := qrpc.NewServer(bindings)
 

@@ -15,12 +15,12 @@ import (
 
 // PushCmd do push
 type PushCmd struct {
-	counterMetric metrics.Counter
+	pushCounterMetric metrics.Counter
 }
 
 // NewPushCmd returns a PushCmd instance
-func NewPushCmd(counterMetric metrics.Counter) *PushCmd {
-	return &PushCmd{counterMetric: counterMetric}
+func NewPushCmd(pushCounterMetric metrics.Counter) *PushCmd {
+	return &PushCmd{pushCounterMetric: pushCounterMetric}
 }
 
 // PushResp is resp for PushCmd
@@ -78,11 +78,11 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 				w.WriteBytes(bytes)
 				err := w.EndWrite()
 				if err == nil {
-					cmd.counterMetric.With(counterOKLabels...).Add(1)
+					cmd.pushCounterMetric.With(counterOKLabels...).Add(1)
 					logger.Info("send ok", msg.MsgID, ci.GetID())
 					atomic.AddUint64(&count, 1)
 				} else {
-					cmd.counterMetric.With(counterNGLabels...).Add(1)
+					cmd.pushCounterMetric.With(counterNGLabels...).Add(1)
 					logger.Info("send ng", msg.MsgID, ci.GetID())
 					atomic.AddUint64(&ngcount, 1)
 				}

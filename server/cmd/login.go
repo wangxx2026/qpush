@@ -27,15 +27,15 @@ const (
 
 // LoginCmd do login
 type LoginCmd struct {
-	m             sync.Mutex
-	onlineStat    map[int]int64 //appid -> count
-	gaugeMetric   metrics.Gauge
-	counterMetric metrics.Counter
+	m                 sync.Mutex
+	onlineStat        map[int]int64 //appid -> count
+	onlineMetric      metrics.Gauge
+	pushCounterMetric metrics.Counter
 }
 
 // NewLoginCmd returns a LoginCmd instance
-func NewLoginCmd(gaugeMetric metrics.Gauge, counterMetric metrics.Counter) *LoginCmd {
-	return &LoginCmd{onlineStat: make(map[int]int64), gaugeMetric: gaugeMetric, counterMetric: counterMetric}
+func NewLoginCmd(onlineMetric metrics.Gauge, pushCounterMetric metrics.Counter) *LoginCmd {
+	return &LoginCmd{onlineStat: make(map[int]int64), onlineMetric: onlineMetric, pushCounterMetric: pushCounterMetric}
 }
 
 // OfflineMsgData is data part
@@ -113,13 +113,13 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 
 	if err != nil {
 		counterNGLabels := []string{"appid", strconv.Itoa(loginCmd.AppID), "kind", "offlineng"}
-		cmd.counterMetric.With(counterNGLabels...).Add(1)
+		cmd.pushCounterMetric.With(counterNGLabels...).Add(1)
 		logger.Error("EndWrite", err)
 		return
 	}
 
 	counterOKLabels := []string{"appid", strconv.Itoa(loginCmd.AppID), "kind", "offlineok"}
-	cmd.counterMetric.With(counterOKLabels...).Add(1)
+	cmd.pushCounterMetric.With(counterOKLabels...).Add(1)
 
 	logger.Debug("test6")
 
@@ -131,7 +131,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	cmd.m.Unlock()
 
 	labels := []string{"appid", strconv.Itoa(loginCmd.AppID), "kind", "online"}
-	cmd.gaugeMetric.With(labels...).Set(float64(v + 1))
+	cmd.onlineMetric.With(labels...).Set(float64(v + 1))
 
 	ci.NotifyWhenClose(func() {
 		cmd.m.Lock()
@@ -139,7 +139,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 		if v > 0 {
 			cmd.onlineStat[loginCmd.AppID] = v - 1
 			cmd.m.Unlock()
-			cmd.gaugeMetric.With(labels...).Set(float64(v - 1))
+			cmd.onlineMetric.With(labels...).Set(float64(v - 1))
 		} else {
 			cmd.m.Unlock()
 			logger.Error("bug happend")
