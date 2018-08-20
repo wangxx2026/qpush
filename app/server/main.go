@@ -62,18 +62,22 @@ func main() {
 				internalAddr = DefaultInternalAddress
 			}
 
+			// online count
 			gaugeMetric := kitprometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
 				Namespace: "qpush",
 				Subsystem: "server",
 				Name:      "gauge_result",
 				Help:      "The gauge result per app.",
 			}, []string{"appid", "kind"})
+			// ok|ng count
+			// request count
 			counterMetric := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 				Namespace: "qpush",
 				Subsystem: "server",
 				Name:      "count_result",
 				Help:      "The counter result per app.",
 			}, []string{"appid", "kind"})
+			// latency
 			summaryMetric := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
 				Namespace: "qpush",
 				Subsystem: "server",
@@ -95,8 +99,8 @@ func main() {
 			internalHandler.Handle(server.CheckGUIDCmd, &internalcmd.CheckGUIDCmd{})
 
 			bindings := []qrpc.ServerBinding{
-				qrpc.ServerBinding{Addr: publicAddr, Handler: handler, DefaultReadTimeout: 10 /*second*/, LatencyMetric: summaryMetric},
-				qrpc.ServerBinding{Addr: internalAddr, Handler: internalHandler, LatencyMetric: summaryMetric}}
+				qrpc.ServerBinding{Addr: publicAddr, Handler: handler, DefaultReadTimeout: 10 /*second*/, LatencyMetric: summaryMetric, CounterMetric: counterMetric},
+				qrpc.ServerBinding{Addr: internalAddr, Handler: internalHandler, LatencyMetric: summaryMetric, CounterMetric: counterMetric}}
 
 			qserver := qrpc.NewServer(bindings)
 
