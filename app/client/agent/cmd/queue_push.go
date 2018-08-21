@@ -161,7 +161,7 @@ func handleMsg(ctx context.Context, cancelFunc context.CancelFunc, msgCh <-chan 
 					frame, err := resp.GetFrame()
 					logger.Debug("after GetFrame")
 					if err != nil {
-						logger.Error(uuid, addr, "GetFrame fail", addr)
+						logger.Error(uuid, addr, "GetFrame fail", err)
 						atomic.StoreInt32(&failed, 1)
 						return
 					}
