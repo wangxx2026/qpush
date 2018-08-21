@@ -57,7 +57,8 @@ type OfflineMsg struct {
 func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) {
 	ci := frame.ConnectionInfo()
 	serveconn := ci.SC
-	logger.Info(uintptr(unsafe.Pointer(serveconn)), "LoginCmd called")
+	mem := uintptr(unsafe.Pointer(serveconn))
+	logger.Info(mem, "LoginCmd called")
 
 	jsonwriter := server.JSONFrameWriter{FrameWriter: writer}
 
@@ -71,15 +72,15 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 
 	deviceInfo := &server.DeviceInfo{Uptime: time.Now(), GUID: loginCmd.GUID, AppID: loginCmd.AppID}
 
-	logger.Debug("test2")
+	logger.Info(mem, "test2")
 
 	logger.Debug(server.GetAppGUID(loginCmd.AppID, loginCmd.GUID))
 	serveconn.SetID(server.GetAppGUID(loginCmd.AppID, loginCmd.GUID))
-	logger.Debug("test2.5")
+	logger.Info(mem, "test2.5")
 	// enlarge read timeout after client login
 	serveconn.Reader().SetReadTimeout(DefaultReadTimeoutAfterLogin)
 
-	logger.Debug("test3")
+	logger.Info(mem, "test3")
 	// fetch offline messages
 	data := map[string]interface{}{"app_id": loginCmd.AppID, "app_key": loginCmd.AppKey, "guid": loginCmd.GUID}
 	resp, err := http.DoAkSkRequest(http.PostMethod, "/v1/pushaksk/offlinemsg", data)
@@ -89,6 +90,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 		return
 	}
 
+	logger.Info(mem, "test4")
 	logger.Debug("resp", string(resp))
 
 	var result OfflineMsg
@@ -110,7 +112,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	jsonwriter.StartWrite(frame.RequestID, server.LoginRespCmd, 0)
 	jsonwriter.WriteJSON(result.Data.MsgList)
 	err = jsonwriter.EndWrite()
-	logger.Debug("test5")
+	logger.Info(mem, "test5")
 
 	if err != nil {
 		counterNGLabels := []string{"appid", strconv.Itoa(loginCmd.AppID), "kind", "offlineng"}
@@ -122,7 +124,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	counterOKLabels := []string{"appid", strconv.Itoa(loginCmd.AppID), "kind", "offlineok"}
 	cmd.pushCounterMetric.With(counterOKLabels...).Add(1)
 
-	logger.Debug("test6")
+	logger.Info(mem, "test6")
 
 	ci.SetAnything(deviceInfo)
 
