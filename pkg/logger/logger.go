@@ -14,6 +14,15 @@ const (
 	SEP = " : "
 )
 
+// InfoIf calls Info if cond is true
+func InfoIf(cond bool, msg ...interface{}) {
+	if !cond {
+		return
+	}
+
+	Info(msg...)
+}
+
 // Info prints to stdout
 func Info(msg ...interface{}) {
 	fmt.Fprint(os.Stdout, time.Now().String(), SEP, fmt.Sprintln(msg...))
@@ -24,6 +33,15 @@ func Error(msg ...interface{}) {
 	now := time.Now().String()
 	fmt.Fprint(os.Stdout, now, SEP, fmt.Sprintln(msg...))
 	fmt.Fprint(os.Stderr, now, SEP, fmt.Sprintln(msg...))
+}
+
+// DebugIf calls Debug if cond is true
+func DebugIf(cond bool, msg ...interface{}) {
+	if !cond {
+		return
+	}
+
+	Debug(msg...)
 }
 
 // Debug prints to stderr
