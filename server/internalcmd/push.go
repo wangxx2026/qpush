@@ -109,6 +109,9 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 		if !ok { // anything is nil in this case
 			return true
 		}
+		if pushCmd.AppID != deviceInfo.AppID {
+			return true
+		}
 		// filter by os
 		if pushCmd.OS != "" {
 			if pushCmd.OS != deviceInfo.OS {
