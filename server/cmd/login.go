@@ -58,7 +58,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	ci := frame.ConnectionInfo()
 	serveconn := ci.SC
 	mem := uintptr(unsafe.Pointer(serveconn))
-	logger.Info(mem, "LoginCmd called")
+	logger.Debug(mem, "LoginCmd called")
 
 	jsonwriter := server.JSONFrameWriter{FrameWriter: writer}
 
@@ -72,15 +72,15 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 
 	deviceInfo := &server.DeviceInfo{Uptime: time.Now(), GUID: loginCmd.GUID, AppID: loginCmd.AppID}
 
-	logger.Info(mem, "test2")
+	logger.Debug(mem, "test2")
 
-	logger.Debug(server.GetAppGUID(loginCmd.AppID, loginCmd.GUID))
+	logger.Debug(mem, server.GetAppGUID(loginCmd.AppID, loginCmd.GUID))
 	serveconn.SetID(server.GetAppGUID(loginCmd.AppID, loginCmd.GUID))
-	logger.Info(mem, "test2.5")
+	logger.Debug(mem, "test2.5")
 	// enlarge read timeout after client login
 	serveconn.Reader().SetReadTimeout(DefaultReadTimeoutAfterLogin)
 
-	logger.Info(mem, "test3")
+	logger.Debug(mem, "test3")
 	// fetch offline messages
 	data := map[string]interface{}{"app_id": loginCmd.AppID, "app_key": loginCmd.AppKey, "guid": loginCmd.GUID}
 	resp, err := http.DoAkSkRequest(http.PostMethod, "/v1/pushaksk/offlinemsg", data)
@@ -90,8 +90,8 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 		return
 	}
 
-	logger.Info(mem, "test4")
-	logger.Debug("resp", string(resp))
+	logger.Debug(mem, "test4")
+	// logger.Debug("resp", string(resp))
 
 	var result OfflineMsg
 	err = json.Unmarshal(resp, &result)
@@ -112,7 +112,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	jsonwriter.StartWrite(frame.RequestID, server.LoginRespCmd, 0)
 	jsonwriter.WriteJSON(result.Data.MsgList)
 	err = jsonwriter.EndWrite()
-	logger.Info(mem, "test5")
+	logger.Debug(mem, "test5")
 
 	if err != nil {
 		counterNGLabels := []string{"appid", strconv.Itoa(loginCmd.AppID), "kind", "offlineng"}
@@ -124,7 +124,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	counterOKLabels := []string{"appid", strconv.Itoa(loginCmd.AppID), "kind", "offlineok"}
 	cmd.pushCounterMetric.With(counterOKLabels...).Add(1)
 
-	logger.Info(mem, "test6")
+	logger.Debug(mem, "test6")
 
 	ci.SetAnything(deviceInfo)
 

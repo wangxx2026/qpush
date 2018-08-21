@@ -31,11 +31,11 @@ func Debug(msg ...interface{}) {
 
 	conf := config.Get()
 
-	if conf.Env != config.DevEnv {
+	if !conf.EnableDebug {
 		return
 	}
 
-	fmt.Fprint(os.Stderr, time.Now().String(), SEP, fmt.Sprintln(msg...))
+	Error(msg...)
 }
 
 type log struct {
