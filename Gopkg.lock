@@ -123,7 +123,7 @@
   branch = "master"
   name = "github.com/zhiqiangxu/qrpc"
   packages = ["."]
-  revision = "c8f189450d24d886ab2e7b2375941429b3de4640"
+  revision = "ec134e6473751eca358c3dfab5e6cfc815e1dd29"
 
 [[projects]]
   branch = "master"
