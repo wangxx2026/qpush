@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"unsafe"
 
 	"github.com/go-kit/kit/metrics"
 	"github.com/zhiqiangxu/qrpc"
@@ -54,7 +55,9 @@ type OfflineMsg struct {
 
 // ServeQRPC implements qrpc.Handler
 func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) {
-	logger.Debug("LoginCmd called")
+	ci := frame.ConnectionInfo()
+	serveconn := ci.SC
+	logger.Info(uintptr(unsafe.Pointer(serveconn)), "LoginCmd called")
 
 	jsonwriter := server.JSONFrameWriter{FrameWriter: writer}
 
@@ -70,8 +73,6 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 
 	logger.Debug("test2")
 
-	ci := frame.ConnectionInfo()
-	serveconn := ci.SC
 	logger.Debug(server.GetAppGUID(loginCmd.AppID, loginCmd.GUID))
 	serveconn.SetID(server.GetAppGUID(loginCmd.AppID, loginCmd.GUID))
 	logger.Debug("test2.5")
