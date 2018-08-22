@@ -3,7 +3,6 @@ package tail
 import (
 	"io"
 	"os"
-	"qpush/pkg/logger"
 )
 
 const (
@@ -35,10 +34,10 @@ func Line2Offset(file string, n int) (int64, error) {
 	for {
 
 		nbytes, err := f.ReadAt(buf, readOffset)
-		logger.Debug("ReadAt", readOffset, nbytes, err)
+		// logger.Debug("ReadAt", readOffset, nbytes, err)
 
 		for i := int64(nbytes - 1); i >= 0; i-- {
-			logger.Debug("i", i)
+			// logger.Debug("i", i)
 			if buf[i] == '\n' {
 				lc++
 

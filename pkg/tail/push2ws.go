@@ -16,7 +16,7 @@ func Push2WS(c *websocket.Conn, file string, n int) error {
 	defer c.Close()
 
 	tailOffset, err := Line2Offset(file, n)
-	logger.Debug("tailOffset", tailOffset)
+	// logger.Debug("tailOffset", tailOffset)
 	if err != nil {
 		logger.Error("Line2Offset", err)
 		return err
