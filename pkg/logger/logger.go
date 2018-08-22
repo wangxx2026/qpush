@@ -35,13 +35,13 @@ func Error(msg ...interface{}) {
 	fmt.Fprint(os.Stderr, now, SEP, fmt.Sprintln(msg...))
 }
 
-// DebugIf calls Debug if cond is true
+// DebugIf will print to stdout/stderr if cond is true
 func DebugIf(cond bool, msg ...interface{}) {
 	if !cond {
 		return
 	}
 
-	Debug(msg...)
+	Error(msg...)
 }
 
 // Debug prints to stderr

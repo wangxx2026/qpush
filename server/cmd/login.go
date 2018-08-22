@@ -57,7 +57,7 @@ type OfflineMsg struct {
 func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) {
 	ci := frame.ConnectionInfo()
 	serveconn := ci.SC
-	mem := uintptr(unsafe.Pointer(serveconn))
+	mem := unsafe.Pointer(serveconn)
 	logger.Debug(mem, "LoginCmd called")
 
 	jsonwriter := server.JSONFrameWriter{FrameWriter: writer}
