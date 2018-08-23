@@ -238,6 +238,9 @@ func handleWriteMQ(ctx context.Context, cancelFunc context.CancelFunc, logCh <-c
 				logger.Error("PushResp unmarshal fail", err)
 				continue //ignore error
 			}
+			if pushResp.OK == 0 && pushResp.NG == 0 {
+				continue
+			}
 			respes = append(respes, pushResp)
 			if len(respes) > writeRespBatch {
 				// TODO fix dup
