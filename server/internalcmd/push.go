@@ -25,8 +25,9 @@ func NewPushCmd(pushCounterMetric metrics.Counter) *PushCmd {
 
 // PushResp is resp for PushCmd
 type PushResp struct {
-	OK uint64
-	NG uint64
+	AppID int
+	OK    uint64
+	NG    uint64
 }
 
 // ServeQRPC implements qrpc.Handler
@@ -90,7 +91,7 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 		})
 		wg.Wait()
 
-		cmd.writeResp(writer, frame, &PushResp{OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount)})
+		cmd.writeResp(writer, frame, &PushResp{AppID: pushCmd.AppID, OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount)})
 		return
 	}
 
@@ -142,7 +143,7 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 	})
 	wg.Wait()
 
-	cmd.writeResp(writer, frame, &PushResp{OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount)})
+	cmd.writeResp(writer, frame, &PushResp{AppID: pushCmd.AppID, OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount)})
 }
 
 func (cmd *PushCmd) writeResp(writer qrpc.FrameWriter, frame *qrpc.RequestFrame, result *PushResp) {
