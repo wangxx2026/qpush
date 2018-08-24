@@ -233,7 +233,7 @@ func handleWriteMQ(ctx context.Context, cancelFunc context.CancelFunc, logCh <-c
 		select {
 		case logBytes := <-logCh:
 			var pushResp internalcmd.PushResp
-			err := json.Unmarshal(logBytes, &pushCmd)
+			err := json.Unmarshal(logBytes, &pushResp)
 			if err != nil {
 				logger.Error("PushResp unmarshal fail", err)
 				continue //ignore error
