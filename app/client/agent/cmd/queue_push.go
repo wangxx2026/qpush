@@ -239,6 +239,7 @@ func handleWriteMQ(ctx context.Context, cancelFunc context.CancelFunc, logCh <-c
 				continue //ignore error
 			}
 			if pushResp.OK == 0 && pushResp.NG == 0 {
+				logger.Debug("ignore all zero", string(logBytes))
 				continue
 			}
 			respes = append(respes, pushResp)
