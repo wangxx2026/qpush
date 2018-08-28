@@ -16,6 +16,7 @@ import (
 	"qpush/server/cmd"
 	"qpush/server/internalcmd"
 	"runtime"
+	"sort"
 	"strconv"
 	"syscall"
 	"time"
@@ -122,6 +123,21 @@ func main() {
 					case "/gc":
 						runtime.GC()
 						io.WriteString(w, "gc ok\n")
+						return
+					case "/listguid":
+						var result server.DeviceInfoSlice
+						qserver.WalkConn(0, func(w qrpc.FrameWriter, ci *qrpc.ConnectionInfo) bool {
+							deviceInfo, ok := ci.GetAnything().(*server.DeviceInfo)
+							if ok {
+								result = append(result, deviceInfo)
+							}
+
+							return true
+						})
+
+						sort.Sort(result)
+						bytes, _ := json.Marshal(result)
+						io.WriteString(w, string(bytes))
 						return
 					}
 
