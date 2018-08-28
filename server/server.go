@@ -84,6 +84,13 @@ type DeviceInfo struct {
 	OS     string
 }
 
+// DeviceInfoSlice for slice of DeviceInfo
+type DeviceInfoSlice []*DeviceInfo
+
+func (s DeviceInfoSlice) Len() int           { return len(s) }
+func (s DeviceInfoSlice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s DeviceInfoSlice) Less(i, j int) bool { return s[i].Uptime.Before(s[j].Uptime) }
+
 // GetAppGUID creates unique id by appID and guid
 func GetAppGUID(appID int, guid string) string {
 	return fmt.Sprintf("%d:%s", appID, guid)
