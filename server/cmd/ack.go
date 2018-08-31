@@ -9,6 +9,7 @@ import (
 	"qpush/server"
 	"sync"
 	"time"
+	"unsafe"
 
 	"github.com/zhiqiangxu/qrpc"
 )
@@ -56,6 +57,10 @@ func (cmd *AckCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) 
 		return
 	}
 	appGUID := server.GetAppGUID(deviceInfo.AppID, deviceInfo.GUID)
+
+	serveconn := ci.SC
+	mem := unsafe.Pointer(serveconn)
+	logger.Debug(mem, string(frame.Payload))
 
 	ackCmd := client.AckCmd{}
 	err := json.Unmarshal(frame.Payload, &ackCmd)
