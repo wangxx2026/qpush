@@ -90,23 +90,23 @@ var (
 )
 
 // ProduceMsgKeepAlive will keep the underlying connection alive
-func ProduceMsgKeepAlive(url, topic, msg string) error {
-
-	conn, err := getConn(url)
-	if err != nil {
-		return err
-	}
+func ProduceMsgKeepAlive(url, topic, msg string) (err error) {
 
 	for i := 1; i <= 3; i++ {
+		conn, err := getConn(url)
+		if err != nil {
+			return err
+		}
+
 		err = conn.Publish(topic, msg)
 		if err != nil {
-
+			conn.Close()
 			continue
 		}
 		return nil
 	}
 
-	return err
+	return
 }
 
 func getConn(url string) (*keepAlivedConn, error) {
