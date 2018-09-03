@@ -16,6 +16,7 @@ type PushCmd struct {
 	AppID   int      `json:"app_id"`
 	GUID    []string `json:"guid"`
 	CityIDS []int    `json:"city_ids"`
+	TagIDS  []int    `json:"tag_ids"`
 	OS      string   `json:"os"`
 }
 

@@ -103,6 +103,14 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 		}
 	}
 
+	// filter by tag_ids
+	tagIDMap := make(map[int]struct{})
+	if len(pushCmd.TagIDS) > 0 {
+		for _, tagID := range pushCmd.TagIDS {
+			tagIDMap[tagID] = struct{}{}
+		}
+	}
+
 	qserver.WalkConn(0, func(writer qrpc.FrameWriter, ci *qrpc.ConnectionInfo) bool {
 
 		anything := ci.GetAnything()
@@ -127,6 +135,21 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 				return true
 			}
 		}
+		// filter by tag_id
+		if len(tagIDMap) > 0 {
+			matched := false
+			for _, tagID := range deviceInfo.TagIDS {
+				_, ok := tagIDMap[tagID]
+				if ok {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				return true
+			}
+		}
+
 		qrpc.GoFunc(&wg, func() {
 			writer.StartWrite(pushID, server.ForwardCmd, qrpc.PushFlag)
 			writer.WriteBytes(bytes)

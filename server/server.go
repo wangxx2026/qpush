@@ -81,6 +81,7 @@ type DeviceInfo struct {
 	GUID   string
 	AppID  int
 	CityID int
+	TagIDS []int
 	OS     string
 }
 

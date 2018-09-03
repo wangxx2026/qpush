@@ -41,6 +41,7 @@ func NewLoginCmd(onlineMetric metrics.Gauge, pushCounterMetric metrics.Counter) 
 
 // OfflineMsgData is data part
 type OfflineMsgData struct {
+	TagIDS  []int        `json:"tag_ids"`
 	CityID  int          `json:"city_id"`
 	OS      string       `json:"os"`
 	MsgList []client.Msg `json:"msg_list"`
@@ -107,6 +108,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	}
 
 	deviceInfo.CityID = result.Data.CityID
+	deviceInfo.TagIDS = result.Data.TagIDS
 	deviceInfo.OS = result.Data.OS
 
 	jsonwriter.StartWrite(frame.RequestID, server.LoginRespCmd, 0)
