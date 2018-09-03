@@ -36,6 +36,16 @@ func Load(env string) (*Value, error) {
 	return &config, nil
 }
 
+// LoadFile loads the specified config, used in test
+func LoadFile(file string) (*Value, error) {
+	err := DecodeTOMLFile(file, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &config, nil
+}
+
 // Get fetches the config value
 func Get() *Value {
 	return &config

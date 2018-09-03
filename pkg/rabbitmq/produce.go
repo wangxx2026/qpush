@@ -42,5 +42,4 @@ func ProduceMsg(url, topic, msg string) error {
 			ContentType: "application/json",
 			Body:        []byte(msg),
 		})
-
 }
