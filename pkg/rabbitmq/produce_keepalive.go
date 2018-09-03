@@ -1,6 +1,7 @@
 package rabbitmq
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 
@@ -28,36 +29,40 @@ func newKeepAlivedConn(url string) (*keepAlivedConn, error) {
 	return &keepAlivedConn{conn: conn, chs: make(map[string]*amqp.Channel)}, nil
 }
 
-func (kconn *keepAlivedConn) Publish(topic string, msg string) (err error) {
+func (kconn *keepAlivedConn) Publish(exchange, routingKey, msg string) (err error) {
 	kconn.m.Lock()
 	defer kconn.m.Unlock()
 
-	ch, ok := kconn.chs[topic]
+	key := fmt.Sprintf("%s:%s", exchange, routingKey)
+	ch, ok := kconn.chs[key]
 	if !ok {
 		ch, err = kconn.conn.Channel()
 		if err != nil {
 			return
 		}
 
-		_, err = ch.QueueDeclare(
-			topic, // name
-			true,  // durable
-			false, // delete when unused
-			false, // exclusive
-			false, // no-wait
-			nil,   // arguments
-		)
-		if err != nil {
-			return
+		if routingKey != "" {
+			_, err = ch.QueueDeclare(
+				routingKey, // name
+				true,       // durable
+				false,      // delete when unused
+				false,      // exclusive
+				false,      // no-wait
+				nil,        // arguments
+			)
+			if err != nil {
+				return
+			}
 		}
-		kconn.chs[topic] = ch
+
+		kconn.chs[key] = ch
 	}
 
 	return ch.Publish(
-		"",    // exchange
-		topic, // routing key
-		false, // mandatory
-		false, // immediate
+		exchange,   // exchange
+		routingKey, // routing key
+		false,      // mandatory
+		false,      // immediate
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        []byte(msg),
@@ -90,15 +95,15 @@ var (
 )
 
 // ProduceMsgKeepAlive will keep the underlying connection alive
-func ProduceMsgKeepAlive(url, topic, msg string) (err error) {
+func ProduceMsgKeepAlive(url, exchange, routingKey, msg string) (err error) {
 
 	for i := 1; i <= 3; i++ {
 		conn, err := getConn(url)
 		if err != nil {
-			return err
+			continue
 		}
 
-		err = conn.Publish(topic, msg)
+		err = conn.Publish(exchange, routingKey, msg)
 		if err != nil {
 			conn.Close()
 			continue

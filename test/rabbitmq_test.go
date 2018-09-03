@@ -16,7 +16,7 @@ func BenchmarkRabbitMQ(b *testing.B) {
 	b.SetParallelism(5000)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			err = rabbitmq.ProduceMsgKeepAlive(conf.RabbitMQ, "push-benchmark", "hello world")
+			err = rabbitmq.ProduceMsgKeepAlive(conf.RabbitMQ, "", "push-benchmark", "hello world")
 			if err != nil {
 				b.Fatalf("ProduceMsg err: %v", err)
 			}

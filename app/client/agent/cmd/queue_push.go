@@ -219,9 +219,9 @@ func handleWriteMQ(ctx context.Context, cancelFunc context.CancelFunc, logCh <-c
 					logger.Error("marshal respes fail", err)
 					continue
 				}
-				err = rabbitmq.ProduceMsg(conf.RabbitMQ, "push-resp", string(bytes))
+				err = rabbitmq.ProduceMsgKeepAlive(conf.RabbitMQ, "", "push-resp", string(bytes))
 				if err != nil {
-					logger.Error("ProduceMsg fail", err)
+					logger.Error("ProduceMsgKeepAlive fail", err)
 				}
 				logger.Info("push-resp OK", string(bytes))
 			}
