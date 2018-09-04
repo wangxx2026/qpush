@@ -32,8 +32,8 @@
 [[projects]]
   name = "github.com/gorilla/websocket"
   packages = ["."]
-  revision = "3ff3320c2a1756a3691521efc290b4701575147c"
-  version = "v1.3.0"
+  revision = "66b9c49e59c6c48f0ffce28c2d8b8a5678502c6d"
+  version = "v1.4.0"
 
 [[projects]]
   name = "github.com/hpcloud/tail"
@@ -123,13 +123,13 @@
   branch = "master"
   name = "github.com/zhiqiangxu/qrpc"
   packages = ["."]
-  revision = "5586a116199073622279874a509e50909aa8e444"
+  revision = "f40baf9155ddace49ba45e6a1fb0049ae5c0c8af"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "614d502a4dac94afa3a6ce146bd1736da82514c6"
+  revision = "182538f80094b6a8efaade63a8fd8e0d9d5843dd"
 
 [[projects]]
   branch = "master"
@@ -138,7 +138,7 @@
     "unix",
     "windows"
   ]
-  revision = "3b58ed4ad3395d483fc92d5d14123ce2c3581fec"
+  revision = "2b024373dcd9800f0cae693839fac6ede8d64a8c"
 
 [[projects]]
   name = "gopkg.in/fsnotify.v1"
