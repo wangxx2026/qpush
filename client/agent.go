@@ -2,6 +2,7 @@ package client
 
 // Msg is model for message
 type Msg struct {
+	Style        int    `json:"style"`
 	MsgID        string `json:"msg_id"`
 	Title        string `json:"title"`
 	Content      string `json:"content"`
