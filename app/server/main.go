@@ -46,21 +46,12 @@ func main() {
 	var rootCmd = &cobra.Command{
 		Use:   "qpushserver [public address] [internal address]",
 		Short: "listen and server at specified address",
+		Args:  cobra.MaximumNArgs(2),
 		Run: func(cobraCmd *cobra.Command, args []string) {
-			var (
-				publicAddr   string
-				internalAddr string
-			)
-			if len(args) > 0 {
-				publicAddr = args[0]
-			} else {
-				publicAddr = DefaultPublicAddress
-			}
-
-			if len(args) > 1 {
-				internalAddr = args[1]
-			} else {
-				internalAddr = DefaultInternalAddress
+			publicAddr, internalAddr := DefaultPublicAddress, DefaultInternalAddress
+			slice := []*string{&publicAddr, &internalAddr}
+			for i, arg := range args {
+				*slice[i] = arg
 			}
 
 			// online count
