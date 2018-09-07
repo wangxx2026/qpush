@@ -123,13 +123,13 @@
   branch = "master"
   name = "github.com/zhiqiangxu/qrpc"
   packages = ["."]
-  revision = "f40baf9155ddace49ba45e6a1fb0049ae5c0c8af"
+  revision = "dfb380111762837c197d1afb7426beffae41aa53"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "182538f80094b6a8efaade63a8fd8e0d9d5843dd"
+  revision = "0709b304e793a5edb4a2c0145f281ecdc20838a4"
 
 [[projects]]
   branch = "master"
@@ -138,7 +138,7 @@
     "unix",
     "windows"
   ]
-  revision = "2b024373dcd9800f0cae693839fac6ede8d64a8c"
+  revision = "8cf3aee429924738c56c34bb819c4ea8273fc434"
 
 [[projects]]
   name = "gopkg.in/fsnotify.v1"
