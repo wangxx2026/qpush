@@ -97,12 +97,12 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	var result OfflineMsg
 	err = json.Unmarshal(resp, &result)
 	if err != nil {
-		logger.Error("OfflineMsg Unmarshal", err)
+		logger.Error(mem, "OfflineMsg Unmarshal", err)
 		frame.Close()
 		return
 	}
 	if result.Code != 0 {
-		logger.Error("login failed", string(resp))
+		logger.Error(mem, "login failed", string(resp))
 		frame.Close()
 		return
 	}
@@ -119,7 +119,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	if err != nil {
 		counterNGLabels := []string{"appid", strconv.Itoa(loginCmd.AppID), "kind", "offlineng"}
 		cmd.pushCounterMetric.With(counterNGLabels...).Add(1)
-		logger.Error("EndWrite", err)
+		logger.Error(mem, "EndWrite", err)
 		return
 	}
 
