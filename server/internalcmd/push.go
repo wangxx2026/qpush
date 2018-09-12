@@ -25,9 +25,12 @@ func NewPushCmd(pushCounterMetric metrics.Counter) *PushCmd {
 
 // PushResp is resp for PushCmd
 type PushResp struct {
-	AppID int
-	OK    uint64
-	NG    uint64
+	AppID    int
+	OK       uint64
+	NG       uint64
+	MsgID    string
+	NGDetail []string
+	OKDetail []string
 }
 
 // ServeQRPC implements qrpc.Handler
@@ -54,10 +57,36 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 	}
 
 	var (
-		count   uint64
-		ngcount uint64
-		wg      sync.WaitGroup
+		count      uint64
+		ngcount    uint64
+		okDetailCh = make(chan string, 10)
+		okDetail   []string
+		ngDetailCh = make(chan string, 10)
+		ngDetail   []string
+		wg         sync.WaitGroup
 	)
+	qrpc.GoFunc(&wg, func() {
+		for {
+			select {
+			case id, ok := <-okDetailCh:
+				if !ok {
+					return
+				}
+				okDetail = append(okDetail, id)
+			}
+		}
+	})
+	qrpc.GoFunc(&wg, func() {
+		for {
+			select {
+			case id, ok := <-ngDetailCh:
+				if !ok {
+					return
+				}
+				ngDetail = append(ngDetail, id)
+			}
+		}
+	})
 
 	qserver := frame.ConnectionInfo().SC.Server()
 	pushID := qserver.GetPushID()
@@ -72,6 +101,7 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 		logger.Debug("ids", len(ids), ids)
 		counterOKLabels := []string{"appid", strconv.Itoa(pushCmd.AppID), "kind", "pushok"}
 		counterNGLabels := []string{"appid", strconv.Itoa(pushCmd.AppID), "kind", "pushng"}
+
 		qserver.WalkConnByID(0, ids, func(w qrpc.FrameWriter, ci *qrpc.ConnectionInfo) {
 			logger.Debug("WalkConnByID")
 			qrpc.GoFunc(&wg, func() {
@@ -82,16 +112,21 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 					cmd.pushCounterMetric.With(counterOKLabels...).Add(1)
 					logger.Info("send ok", msg.MsgID, ci.GetID())
 					atomic.AddUint64(&count, 1)
+					okDetailCh <- ci.GetID()
 				} else {
 					cmd.pushCounterMetric.With(counterNGLabels...).Add(1)
 					logger.Info("send ng", msg.MsgID, ci.GetID())
 					atomic.AddUint64(&ngcount, 1)
+					ngDetailCh <- ci.GetID()
 				}
 			})
 		})
+		close(okDetailCh)
+		close(ngDetailCh)
+
 		wg.Wait()
 
-		cmd.writeResp(writer, frame, &PushResp{AppID: pushCmd.AppID, OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount)})
+		cmd.writeResp(writer, frame, &PushResp{AppID: pushCmd.AppID, OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount), OKDetail: okDetail, NGDetail: ngDetail})
 		return
 	}
 
@@ -157,16 +192,20 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 			if err == nil {
 				logger.Info("send ok", msg.MsgID, ci.GetID())
 				atomic.AddUint64(&count, 1)
+				okDetailCh <- ci.GetID()
 			} else {
 				logger.Info("send ng", msg.MsgID, ci.GetID())
 				atomic.AddUint64(&ngcount, 1)
+				ngDetailCh <- ci.GetID()
 			}
 		})
 		return true
 	})
+	close(okDetailCh)
+	close(ngDetailCh)
 	wg.Wait()
 
-	cmd.writeResp(writer, frame, &PushResp{AppID: pushCmd.AppID, OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount)})
+	cmd.writeResp(writer, frame, &PushResp{AppID: pushCmd.AppID, OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount), OKDetail: okDetail, NGDetail: ngDetail})
 }
 
 func (cmd *PushCmd) writeResp(writer qrpc.FrameWriter, frame *qrpc.RequestFrame, result *PushResp) {
