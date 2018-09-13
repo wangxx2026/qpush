@@ -121,10 +121,11 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 				}
 			})
 		})
-		close(okDetailCh)
-		close(ngDetailCh)
 
 		wg.Wait()
+
+		close(okDetailCh)
+		close(ngDetailCh)
 
 		cmd.writeResp(writer, frame, &PushResp{AppID: pushCmd.AppID, OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount), OKDetail: okDetail, NGDetail: ngDetail})
 		return
@@ -201,9 +202,10 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 		})
 		return true
 	})
+	wg.Wait()
+
 	close(okDetailCh)
 	close(ngDetailCh)
-	wg.Wait()
 
 	cmd.writeResp(writer, frame, &PushResp{AppID: pushCmd.AppID, OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount), OKDetail: okDetail, NGDetail: ngDetail})
 }
