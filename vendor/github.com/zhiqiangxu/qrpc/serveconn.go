@@ -236,7 +236,7 @@ func (sc *serveconn) SetID(id string) {
 	ci.l.Lock()
 	if ci.id != "" {
 		ci.l.Unlock()
-		panic(fmt.Sprintf("SetID called twice: %s vs %s", id, ci.id))
+		panic(fmt.Sprintf("SetID called twice"))
 	}
 	ci.id = id
 	ci.l.Unlock()
