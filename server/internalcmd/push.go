@@ -51,7 +51,7 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 		Transmission: pushCmd.Transmission, Unfold: pushCmd.Unfold, PassThrough: pushCmd.PassThrough}
 	bytes, err := json.Marshal(&msg)
 	if err != nil {
-		logger.Error("failed to marshal client.Msg")
+		logger.Error("PushCmd failed to marshal client.Msg")
 		frame.Close()
 		return
 	}
@@ -98,24 +98,24 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 			ids = append(ids, server.GetAppGUID(pushCmd.AppID, guid))
 		}
 
-		logger.Debug("ids", len(ids), ids)
+		logger.Debug("PushCmd ids", len(ids), ids)
 		counterOKLabels := []string{"appid", strconv.Itoa(pushCmd.AppID), "kind", "pushok"}
 		counterNGLabels := []string{"appid", strconv.Itoa(pushCmd.AppID), "kind", "pushng"}
 
 		qserver.WalkConnByID(0, ids, func(w qrpc.FrameWriter, ci *qrpc.ConnectionInfo) {
-			logger.Debug("WalkConnByID")
+			logger.Debug("PushCmd WalkConnByID")
 			qrpc.GoFunc(&wg, func() {
 				w.StartWrite(pushID, server.ForwardCmd, qrpc.PushFlag)
 				w.WriteBytes(bytes)
 				err := w.EndWrite()
 				if err == nil {
 					cmd.pushCounterMetric.With(counterOKLabels...).Add(1)
-					logger.Info("send ok", msg.MsgID, ci.GetID())
+					logger.Info("PushCmd send ok", msg.MsgID, ci.GetID())
 					atomic.AddUint64(&count, 1)
 					// okDetailCh <- ci.GetID()
 				} else {
 					cmd.pushCounterMetric.With(counterNGLabels...).Add(1)
-					logger.Info("send ng", msg.MsgID, ci.GetID())
+					logger.Info("PushCmd send ng", msg.MsgID, ci.GetID())
 					atomic.AddUint64(&ngcount, 1)
 					// ngDetailCh <- ci.GetID()
 				}
