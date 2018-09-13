@@ -57,36 +57,13 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 	}
 
 	var (
-		count   uint64
-		ngcount uint64
-		// okDetailCh = make(chan string, 10)
+		count    uint64
+		ngcount  uint64
+		okngmu   sync.Mutex
 		okDetail []string
-		// ngDetailCh = make(chan string, 10)
 		ngDetail []string
 		wg       sync.WaitGroup
 	)
-	// qrpc.GoFunc(&wg, func() {
-	// 	for {
-	// 		select {
-	// 		case id, ok := <-okDetailCh:
-	// 			if !ok {
-	// 				return
-	// 			}
-	// 			okDetail = append(okDetail, id)
-	// 		}
-	// 	}
-	// })
-	// qrpc.GoFunc(&wg, func() {
-	// 	for {
-	// 		select {
-	// 		case id, ok := <-ngDetailCh:
-	// 			if !ok {
-	// 				return
-	// 			}
-	// 			ngDetail = append(ngDetail, id)
-	// 		}
-	// 	}
-	// })
 
 	qserver := frame.ConnectionInfo().SC.Server()
 	pushID := qserver.GetPushID()
@@ -112,20 +89,23 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 					cmd.pushCounterMetric.With(counterOKLabels...).Add(1)
 					logger.Info("PushCmd send ok", msg.MsgID, ci.GetID())
 					atomic.AddUint64(&count, 1)
-					// okDetailCh <- ci.GetID()
+
+					okngmu.Lock()
+					okDetail = append(okDetail, ci.GetID())
+					okngmu.Unlock()
 				} else {
 					cmd.pushCounterMetric.With(counterNGLabels...).Add(1)
 					logger.Info("PushCmd send ng", msg.MsgID, ci.GetID())
 					atomic.AddUint64(&ngcount, 1)
-					// ngDetailCh <- ci.GetID()
+
+					okngmu.Lock()
+					ngDetail = append(ngDetail, ci.GetID())
+					okngmu.Unlock()
 				}
 			})
 		})
 
 		wg.Wait()
-
-		// close(okDetailCh)
-		// close(ngDetailCh)
 
 		cmd.writeResp(writer, frame, &PushResp{AppID: pushCmd.AppID, OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount), OKDetail: okDetail, NGDetail: ngDetail})
 		return
@@ -193,19 +173,22 @@ func (cmd *PushCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame)
 			if err == nil {
 				logger.Info("send ok", msg.MsgID, ci.GetID())
 				atomic.AddUint64(&count, 1)
-				// okDetailCh <- ci.GetID()
+
+				okngmu.Lock()
+				okDetail = append(okDetail, ci.GetID())
+				okngmu.Unlock()
 			} else {
 				logger.Info("send ng", msg.MsgID, ci.GetID())
 				atomic.AddUint64(&ngcount, 1)
-				// ngDetailCh <- ci.GetID()
+
+				okngmu.Lock()
+				ngDetail = append(ngDetail, ci.GetID())
+				okngmu.Unlock()
 			}
 		})
 		return true
 	})
 	wg.Wait()
-
-	// close(okDetailCh)
-	// close(ngDetailCh)
 
 	cmd.writeResp(writer, frame, &PushResp{AppID: pushCmd.AppID, OK: atomic.LoadUint64(&count), NG: atomic.LoadUint64(&ngcount), OKDetail: okDetail, NGDetail: ngDetail})
 }

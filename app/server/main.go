@@ -122,7 +122,7 @@ func main() {
 					switch r.URL.Path {
 					case "/gc":
 						runtime.GC()
-						io.WriteString(w, "gc ok2\n")
+						io.WriteString(w, "gc ok3\n")
 						return
 					case "/listguid":
 						var result server.DeviceInfoSlice
