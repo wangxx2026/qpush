@@ -54,6 +54,15 @@ func main() {
 				*slice[i] = arg
 			}
 
+			defer func() {
+				if err := recover(); err != nil {
+					const size = 64 << 10
+					buf := make([]byte, size)
+					buf = buf[:runtime.Stack(buf, false)]
+					logger.Error("main thread panic", err, buf)
+				}
+			}()
+
 			// online count
 			onlineMetric := kitprometheus.NewGaugeFrom(stdprometheus.GaugeOpts{
 				Namespace: "qpush",
