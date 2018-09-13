@@ -16,4 +16,4 @@ AgentLog = "/home/work/qpush-agent/log/qpush.log"
 
 ServerLog = "/home/work/qpush/log/qpush.log"
 
-EnableDebug = true
+EnableDebug = false
