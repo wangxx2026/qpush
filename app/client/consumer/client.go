@@ -40,7 +40,7 @@ func main() {
 				panic(err)
 			}
 			if frame, err := resp.GetFrame(); err != nil {
-				panic("login failed")
+				panic(fmt.Sprintf("login failed:%v", err))
 			} else {
 				fmt.Printf("login resp:%s\n", frame.Payload)
 			}

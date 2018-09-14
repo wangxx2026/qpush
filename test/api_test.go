@@ -2,7 +2,9 @@ package test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"qpush/client"
 	"qpush/pkg/config"
 	"qpush/pkg/http"
 	"qpush/server"
@@ -46,7 +48,7 @@ func BenchmarkApiOffline(b *testing.B) {
 
 func BenchmarkHeartBeat(b *testing.B) {
 	ctx := context.Background()
-	endpoints := []string{"106.14.164.33:8888"}
+	endpoints := []string{"localhost:8888"}
 	api := qrpc.NewAPI(endpoints, qrpc.ConnectionConfig{}, nil)
 
 	b.SetParallelism(500)
@@ -59,4 +61,23 @@ func BenchmarkHeartBeat(b *testing.B) {
 		}
 	})
 
+}
+
+func BenchmarkPush(b *testing.B) {
+	ctx := context.Background()
+	endpoints := []string{"localhost:8890"}
+	api := qrpc.NewAPI(endpoints, qrpc.ConnectionConfig{}, nil)
+
+	cmd := client.PushCmd{Msg: client.Msg{MsgID: "testxx", Title: "title", Content: "content"}, AppID: 1008}
+	bytes, _ := json.Marshal(cmd)
+
+	b.SetParallelism(500)
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, err := api.Call(ctx, server.PushCmd, bytes)
+			if err != nil {
+				b.Fatalf("heartbeat fail:%v", err)
+			}
+		}
+	})
 }

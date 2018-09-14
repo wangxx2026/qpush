@@ -14,4 +14,4 @@ PushQueue = "push-test"
 
 AgentLog = "/tmp/log"
 
-EnableDebug = true
+EnableDebug = false
