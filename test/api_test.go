@@ -1,10 +1,14 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"qpush/pkg/config"
 	"qpush/pkg/http"
+	"qpush/server"
 	"testing"
+
+	"github.com/zhiqiangxu/qrpc"
 )
 
 const (
@@ -38,4 +42,21 @@ func BenchmarkApiOffline(b *testing.B) {
 		}
 
 	})
+}
+
+func BenchmarkHeartBeat(b *testing.B) {
+	ctx := context.Background()
+	endpoints := []string{"106.14.164.33:8888"}
+	api := qrpc.NewAPI(endpoints, qrpc.ConnectionConfig{}, nil)
+
+	b.SetParallelism(500)
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, err := api.Call(ctx, server.HeartBeatCmd, nil)
+			if err != nil {
+				b.Fatalf("heartbeat fail:%v", err)
+			}
+		}
+	})
+
 }
