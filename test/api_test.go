@@ -8,7 +8,9 @@ import (
 	"qpush/pkg/config"
 	"qpush/pkg/http"
 	"qpush/server"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/zhiqiangxu/qrpc"
 )
@@ -80,4 +82,25 @@ func BenchmarkPush(b *testing.B) {
 			}
 		}
 	})
+}
+
+func TestConsumers(t *testing.T) {
+	var wg sync.WaitGroup
+
+	for i := 0; i < 100; i++ {
+		qrpc.GoFunc(&wg, func() {
+			conn, err := qrpc.NewConnection("localhost:8888", qrpc.ConnectionConfig{}, func(conn *qrpc.Connection, frame *qrpc.Frame) {
+				fmt.Println(string(frame.Payload))
+			})
+			if err != nil {
+				panic("err")
+			}
+			loginCmd := client.LoginCmd{GUID: "", AppID: 1, AppKey: ""}
+			bytes, _ := json.Marshal(loginCmd)
+			conn.Request(server.LoginCmd, 0, bytes)
+			time.Sleep(time.Second * 5)
+			fmt.Println(conn)
+		})
+	}
+	wg.Wait()
 }
