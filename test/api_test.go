@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	http2 "net/http"
 	"qpush/client"
 	"qpush/pkg/config"
 	"qpush/pkg/http"
 	"qpush/server"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -45,6 +48,32 @@ func BenchmarkApiOffline(b *testing.B) {
 			}
 		}
 
+	})
+}
+
+func BenchmarkMetrics(b *testing.B) {
+	b.SetParallelism(500)
+	b.RunParallel(func(pb *testing.PB) {
+
+		for pb.Next() {
+			client := &http2.Client{Timeout: http.DefaultTimeout}
+			req, err := http2.NewRequest("GET", "http://106.14.164.33:8080/metrics", strings.NewReader(""))
+			if err != nil {
+				b.Fatalf("NewRequest err: %v", err)
+			}
+
+			resp, err := client.Do(req)
+
+			if err != nil {
+				b.Fatalf("client.Do err: %v", err)
+			}
+
+			defer resp.Body.Close()
+			_, err = ioutil.ReadAll(resp.Body)
+			if err != nil {
+				b.Fatalf("DoAkSkRequest err: %v", err)
+			}
+		}
 	})
 }
 
