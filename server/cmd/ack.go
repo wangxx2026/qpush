@@ -72,7 +72,7 @@ func (cmd *AckCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) 
 
 	cmd.lock.Lock()
 
-	var emptyId bool
+	var emptyID bool
 	ack, ok := cmd.queuedAck[appGUID]
 	if !ok {
 		ack = make(map[string]map[int]struct{})
@@ -80,7 +80,7 @@ func (cmd *AckCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) 
 	}
 	for _, id := range ackCmd.MsgIDS {
 		if id == "" {
-			emptyId = true
+			emptyID = true
 		}
 		_, ok := ack[id]
 		if !ok {
@@ -97,7 +97,7 @@ func (cmd *AckCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) 
 	}
 
 	cmd.lock.Unlock()
-	if emptyId {
+	if emptyID {
 		logger.Error("emptyId", appGUID, ackCmd)
 	}
 	logger.Debug("AckCmd called")
