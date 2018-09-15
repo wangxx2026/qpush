@@ -48,6 +48,54 @@ func BenchmarkApiOffline(b *testing.B) {
 	})
 }
 
+func BenchmarkUpdateUserInfo(b *testing.B) {
+
+	_, err := config.LoadFile("../pkg/config/prod.toml")
+	if err != nil {
+		panic(fmt.Sprintf("failed to load config file: %v", err))
+	}
+
+	b.SetParallelism(500)
+	b.RunParallel(func(pb *testing.PB) {
+
+		for pb.Next() {
+
+			// test
+			// data := map[string]interface{}{"app_id": 1008, "app_key": "ddddddd", "guid": "guid"}
+			// prod
+			dataW := make(map[string]interface{})
+			data := make(map[string]interface{})
+			dev := make(map[string]interface{})
+			dev["android_id"] = "23af56760207669d"
+			dev["sn"] = "90c14c34"
+			dev["os"] = "Xiaomi"
+			dev["os_version"] = "os_version1"
+			dev["os_device"] = "os_device1"
+			data["guid"] = "8bad52ca-d051-5c84-a10b-93f230c94a45"
+			data["app_id"] = 1008
+			data["app_key"] = "ddddddd"
+			data["device_info"] = dev
+			data["device_token1"] = "dddddddddddfgggxxxxxxx"
+			data["device_token2"] = "8VvH+lqswYwQSrAlY5xU6RcVtlRwYsbQCTr1NnrUggggxxxgg"
+			data["channel"] = "ios"
+			data["open_notice"] = true
+			data["open_id"] = "1231231"
+			//data["idempotent"] = "abcdefghijklnnnngggg"
+			data["idempotent"] = "abcdefghijklnnnnggggxxxggg"
+			data["version"] = "vt1.0.1"
+			data["open_id"] = "open_idxxxxxx"
+			dataW["info"] = data
+
+			_, err := http.DoAkSkRequest(http.PostMethod, "/v1/pushaksk/updateuserinfo", dataW)
+
+			if err != nil {
+				b.Fatalf("DoAkSkRequest err: %v", err)
+			}
+		}
+
+	})
+}
+
 func BenchmarkHeartBeat(b *testing.B) {
 	ctx := context.Background()
 	endpoints := []string{"localhost:8888"}
