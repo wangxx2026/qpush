@@ -120,6 +120,9 @@ func main() {
 				http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 					switch r.URL.Path {
+					case "/test":
+						io.WriteString(w, "test\n")
+						return
 					case "/gc":
 						runtime.GC()
 						io.WriteString(w, "gc ok3\n")
