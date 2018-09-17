@@ -1,0 +1,19 @@
+Env = "basetest"
+
+Ak = "2ad2ae6d-142d-433d-b9b4-2f51e84f4475"
+
+Sk = "bea2c365-75f8-411b-b278-0782244b02d4"
+
+GwHost = "39.96.133.135:1323"
+
+Servers = ["39.106.203.218:8890","39.105.91.106:8890"]
+
+RabbitMQ = "amqp://rabbitmq:CK3uU3ezvq@192.168.160.44:5672"
+
+PushQueue = "push-queue"
+
+AgentLog = "/home/work/qpush-agent/log/qpush.log"
+
+ServerLog = "/home/work/qpush/log/qpush.log"
+
+EnableDebug = false
