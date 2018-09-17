@@ -77,6 +77,32 @@ func BenchmarkMetrics(b *testing.B) {
 	})
 }
 
+func BenchmarkHello(b *testing.B) {
+	b.SetParallelism(500)
+	b.RunParallel(func(pb *testing.PB) {
+
+		for pb.Next() {
+			client := &http2.Client{Timeout: http.DefaultTimeout}
+			req, err := http2.NewRequest("GET", "http://localhost:8081/", strings.NewReader(""))
+			if err != nil {
+				b.Fatalf("NewRequest err: %v", err)
+			}
+
+			resp, err := client.Do(req)
+
+			if err != nil {
+				b.Fatalf("client.Do err: %v", err)
+			}
+
+			defer resp.Body.Close()
+			_, err = ioutil.ReadAll(resp.Body)
+			if err != nil {
+				b.Fatalf("ReadAll err: %v", err)
+			}
+		}
+	})
+}
+
 func BenchmarkUpdateUserInfo(b *testing.B) {
 
 	_, err := config.LoadFile("../pkg/config/prod.toml")
