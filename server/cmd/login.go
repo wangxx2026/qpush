@@ -23,7 +23,7 @@ var (
 
 const (
 	// DefaultReadTimeoutAfterLogin is the read timeout after login
-	DefaultReadTimeoutAfterLogin = 10 * 60
+	DefaultReadTimeoutAfterLogin = 100 * 60
 )
 
 // LoginCmd do login
