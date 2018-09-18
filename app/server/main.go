@@ -106,7 +106,7 @@ func main() {
 			internalHandler.Handle(server.CheckGUIDCmd, &internalcmd.CheckGUIDCmd{})
 
 			bindings := []qrpc.ServerBinding{
-				qrpc.ServerBinding{Addr: publicAddr, Handler: handler, DefaultReadTimeout: 10 * 60 /*second*/, LatencyMetric: requestLatencyMetric, CounterMetric: requestCountMetric},
+				qrpc.ServerBinding{Addr: publicAddr, Handler: handler, DefaultReadTimeout: 10 /*second*/, LatencyMetric: requestLatencyMetric, CounterMetric: requestCountMetric},
 				qrpc.ServerBinding{Addr: internalAddr, Handler: internalHandler, LatencyMetric: requestLatencyMetric, CounterMetric: requestCountMetric}}
 
 			qserver := qrpc.NewServer(bindings)
