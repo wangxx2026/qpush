@@ -44,7 +44,7 @@ var benchOnlineCmd = &cobra.Command{
 				apis = append(apis, api)
 				// fmt.Println(string(frame.Payload))
 			})
-			if i%100 == 0 {
+			if i%10 == 0 {
 				wg.Wait()
 			}
 		}
