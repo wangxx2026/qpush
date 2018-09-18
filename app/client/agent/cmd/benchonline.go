@@ -30,13 +30,15 @@ var benchOnlineCmd = &cobra.Command{
 		}
 		guids := strings.Split(string(bytes), "\n")
 
-		api := client.NewAPI([]string{internalAddress}, qrpc.ConnectionConfig{}, nil)
+		var apis []client.API
 		for i := 0; i < size; i++ {
+			api := client.NewAPI([]string{internalAddress}, qrpc.ConnectionConfig{}, nil)
 			loginCmd := client.LoginCmd{AppID: appID, AppKey: appKey, GUID: strings.TrimSpace(guids[offset+i])}
 			_, err := api.CallForFrame(context.Background(), server.LoginCmd, loginCmd)
 			if err != nil {
 				panic(err)
 			}
+			apis = append(apis, api)
 			// fmt.Println(string(frame.Payload))
 		}
 
