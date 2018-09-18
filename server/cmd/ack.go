@@ -42,6 +42,7 @@ var (
 
 // ServeQRPC implements qrpc.Handler
 func (cmd *AckCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) {
+	logger.Info("AckCmd", string(frame.Payload))
 
 	ci := frame.ConnectionInfo()
 	anything := ci.GetAnything()
