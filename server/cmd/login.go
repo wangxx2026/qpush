@@ -119,7 +119,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 	if err != nil {
 		counterNGLabels := []string{"appid", strconv.Itoa(loginCmd.AppID), "kind", "offlineng"}
 		cmd.pushCounterMetric.With(counterNGLabels...).Add(1)
-		logger.Error(mem, "EndWrite", err)
+		logger.Error(mem, "LoginCmd EndWrite", err)
 		return
 	}
 

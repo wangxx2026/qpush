@@ -7,6 +7,7 @@ import (
 	"qpush/server"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/spf13/cobra"
 	"github.com/zhiqiangxu/qrpc"
@@ -31,16 +32,24 @@ var benchOnlineCmd = &cobra.Command{
 		guids := strings.Split(string(bytes), "\n")
 
 		var apis []client.API
+		var wg sync.WaitGroup
 		for i := 0; i < size; i++ {
-			api := client.NewAPI([]string{internalAddress}, qrpc.ConnectionConfig{}, nil)
-			loginCmd := client.LoginCmd{AppID: appID, AppKey: appKey, GUID: strings.TrimSpace(guids[offset+i])}
-			_, err := api.CallForFrame(context.Background(), server.LoginCmd, loginCmd)
-			if err != nil {
-				panic(err)
+			guid := strings.TrimSpace(guids[offset+i])
+			qrpc.GoFunc(&wg, func() {
+				api := client.NewAPI([]string{internalAddress}, qrpc.ConnectionConfig{}, nil)
+				loginCmd := client.LoginCmd{AppID: appID, AppKey: appKey, GUID: guid}
+				_, err := api.CallForFrame(context.Background(), server.LoginCmd, loginCmd)
+				if err != nil {
+					panic(err)
+				}
+				apis = append(apis, api)
+				// fmt.Println(string(frame.Payload))
+			})
+			if i%10 == 0 {
+				wg.Wait()
 			}
-			apis = append(apis, api)
-			// fmt.Println(string(frame.Payload))
 		}
+		wg.Wait()
 
 		select {}
 	}}
