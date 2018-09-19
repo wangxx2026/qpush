@@ -8,7 +8,6 @@ import (
 	"math"
 	mathrand "math/rand"
 	"net"
-	"runtime"
 	"sync"
 	"time"
 )
@@ -346,11 +345,6 @@ func (conn *Connection) closeRWC() {
 
 // Close closes the qrpc connection
 func (conn *Connection) Close() error {
-
-	const size = 64 << 10
-	buf := make([]byte, size)
-	buf = buf[:runtime.Stack(buf, false)]
-	logError("Close stack", string(buf))
 
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
