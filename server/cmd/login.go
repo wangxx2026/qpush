@@ -102,7 +102,7 @@ func (cmd *LoginCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame
 		return
 	}
 	if result.Code != 0 {
-		logger.Error(mem, "login failed", string(resp))
+		logger.Error(mem, "login failed", string(resp), string(frame.Payload))
 		frame.Close()
 		return
 	}
