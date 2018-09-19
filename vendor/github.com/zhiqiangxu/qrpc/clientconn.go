@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"math"
 	mathrand "math/rand"
 	"net"
@@ -383,6 +384,7 @@ func (conn *Connection) readFrames(ctx context.Context, cancelCtx context.Cancel
 	for {
 		frame, err := reader.ReadFrame(conn.cs)
 		if err != nil {
+			fmt.Println("ReadFrame err", err)
 			return
 		}
 
