@@ -104,7 +104,7 @@ func (sc *serveconn) Server() *Server {
 
 // ReaderConfig for change timeout
 type ReaderConfig interface {
-	SetReadTimeout(timeout int32)
+	SetReadTimeout(timeout int)
 }
 
 // Reader returns the ReaderConfig
@@ -256,6 +256,8 @@ func (sc *serveconn) GetWriter() FrameWriter {
 }
 
 var (
+	// ErrNetTimeout for i/o timeout
+	ErrNetTimeout = errors.New("i/o timeout")
 	// ErrInvalidPacket when packet invalid
 	ErrInvalidPacket = errors.New("invalid packet")
 )
@@ -318,7 +320,7 @@ func (sc *serveconn) readFrames() (err error) {
 
 }
 
-func (sc *serveconn) writeFrames(timeout int32) (err error) {
+func (sc *serveconn) writeFrames(timeout int) (err error) {
 
 	defer func() {
 		binding := sc.server.bindings[sc.idx]
@@ -362,10 +364,6 @@ func (sc *serveconn) writeFrames(timeout int32) (err error) {
 				logDebug(unsafe.Pointer(sc), "serveconn Write", err)
 				sc.Close()
 				res.result <- err
-
-				if opErr, ok := err.(*net.OpError); ok {
-					return opErr.Err
-				}
 				return
 			}
 			res.result <- nil
