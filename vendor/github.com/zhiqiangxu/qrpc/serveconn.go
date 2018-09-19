@@ -256,8 +256,6 @@ func (sc *serveconn) GetWriter() FrameWriter {
 }
 
 var (
-	// ErrNetTimeout for i/o timeout
-	ErrNetTimeout = errors.New("i/o timeout")
 	// ErrInvalidPacket when packet invalid
 	ErrInvalidPacket = errors.New("invalid packet")
 )
@@ -364,6 +362,10 @@ func (sc *serveconn) writeFrames(timeout int) (err error) {
 				logDebug(unsafe.Pointer(sc), "serveconn Write", err)
 				sc.Close()
 				res.result <- err
+
+				if opErr, ok := err.(*net.OpError); ok {
+					return opErr.Err
+				}
 				return
 			}
 			res.result <- nil
