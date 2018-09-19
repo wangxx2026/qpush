@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"io/ioutil"
 	"qpush/client"
 	"qpush/server"
@@ -31,18 +30,18 @@ var benchOnlineCmd = &cobra.Command{
 		}
 		guids := strings.Split(string(bytes), "\n")
 
-		var apis []client.API
+		var conns []*client.Connection
 		var wg sync.WaitGroup
 		for i := 0; i < size; i++ {
 			guid := strings.TrimSpace(guids[offset+i])
 			qrpc.GoFunc(&wg, func() {
-				api := client.NewAPI([]string{internalAddress}, qrpc.ConnectionConfig{}, nil)
+				conn, _ := client.NewConnection(internalAddress, qrpc.ConnectionConfig{}, nil)
 				loginCmd := client.LoginCmd{AppID: appID, AppKey: appKey, GUID: guid}
-				_, err := api.CallForFrame(context.Background(), server.LoginCmd, loginCmd)
+				_, _, err := conn.Request(server.LoginCmd, 0, loginCmd)
 				if err != nil {
 					panic(err)
 				}
-				apis = append(apis, api)
+				conns = append(conns, conn)
 				// fmt.Println(string(frame.Payload))
 			})
 			if i%10 == 0 {
