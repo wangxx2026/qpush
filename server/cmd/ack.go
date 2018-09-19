@@ -42,7 +42,6 @@ var (
 
 // ServeQRPC implements qrpc.Handler
 func (cmd *AckCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) {
-	logger.Info("AckCmd", string(frame.Payload))
 
 	ci := frame.ConnectionInfo()
 	anything := ci.GetAnything()
@@ -52,12 +51,14 @@ func (cmd *AckCmd) ServeQRPC(writer qrpc.FrameWriter, frame *qrpc.RequestFrame) 
 		frame.Close()
 		return
 	}
+
 	if deviceInfo.GUID == "" {
 		logger.Error(errAckNoGUID)
 		frame.Close()
 		return
 	}
 	appGUID := server.GetAppGUID(deviceInfo.AppID, deviceInfo.GUID)
+	logger.Info("AckCmdLOG", string(frame.Payload), appGUID)
 
 	serveconn := ci.SC
 	mem := unsafe.Pointer(serveconn)
