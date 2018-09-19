@@ -350,7 +350,7 @@ func (conn *Connection) Close() error {
 	const size = 64 << 10
 	buf := make([]byte, size)
 	buf = buf[:runtime.Stack(buf, false)]
-	logError("Close stack", buf)
+	logError("Close stack", string(buf))
 
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
