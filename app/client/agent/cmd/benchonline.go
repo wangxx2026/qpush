@@ -39,7 +39,11 @@ var benchOnlineCmd = &cobra.Command{
 			qrpc.GoFunc(&wg, func() {
 				conn, _ := client.NewConnection(internalAddress, qrpc.ConnectionConfig{}, nil)
 				loginCmd := client.LoginCmd{AppID: appID, AppKey: appKey, GUID: guid}
-				_, _, err := conn.Request(server.LoginCmd, 0, loginCmd)
+				_, resp, err := conn.Request(server.LoginCmd, 0, loginCmd)
+				if err != nil {
+					panic(err)
+				}
+				_, err = resp.GetFrame()
 				if err != nil {
 					panic(err)
 				}
