@@ -121,7 +121,7 @@ func main() {
 
 					switch r.URL.Path {
 					case "/test":
-						io.WriteString(w, "test\n")
+						io.WriteString(w, "test2\n")
 						return
 					case "/gc":
 						runtime.GC()

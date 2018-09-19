@@ -45,7 +45,6 @@ var benchOnlineCmd = &cobra.Command{
 				}
 				_, err = resp.GetFrame()
 				if err != nil {
-					fmt.Println("err")
 					panic(err)
 				}
 				conns = append(conns, conn)
