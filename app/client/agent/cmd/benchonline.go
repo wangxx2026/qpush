@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"qpush/client"
 	"qpush/server"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/zhiqiangxu/qrpc"
@@ -50,7 +52,8 @@ var benchOnlineCmd = &cobra.Command{
 		}
 		wg.Wait()
 
-		select {}
+		time.Sleep(time.Second * 1000)
+		fmt.Println(conns)
 	}}
 
 func init() {
