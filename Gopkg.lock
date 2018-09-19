@@ -123,7 +123,7 @@
   branch = "master"
   name = "github.com/zhiqiangxu/qrpc"
   packages = ["."]
-  revision = "ae0b52840712d00524a5576034ce2d16f981b9bc"
+  revision = "d71862e3dba35a2ed9c3637e8aed1a334897b403"
 
 [[projects]]
   branch = "master"
@@ -138,7 +138,7 @@
     "unix",
     "windows"
   ]
-  revision = "d0be0721c37eeb5299f245a996a483160fc36940"
+  revision = "ee1b12c67af419cf5a9be3bdbeea7fc1c5f32f11"
 
 [[projects]]
   name = "gopkg.in/fsnotify.v1"
