@@ -165,7 +165,7 @@ func (srv *Server) serve(l tcpKeepAliveListener, idx int) error {
 	defer cancelFunc()
 	for {
 		l.SetDeadline(time.Now().Add(defaultAcceptTimeout))
-		rw, e := l.AcceptTCP()
+		rw, e := l.Accept()
 		if e != nil {
 			select {
 			case <-srv.doneChan:
@@ -213,6 +213,7 @@ func (ln tcpKeepAliveListener) Accept() (net.Conn, error) {
 	}
 	tc.SetKeepAlive(true)
 	tc.SetKeepAlivePeriod(3 * time.Minute)
+	tc.SetNoDelay(true)
 	return tc, nil
 }
 
