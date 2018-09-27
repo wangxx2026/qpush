@@ -150,7 +150,8 @@ func handleMsg(ctx context.Context, cancelFunc context.CancelFunc, msgCh <-chan 
 			for _, serverAddr := range conf.Servers {
 				addr := serverAddr
 				conn := conns[addr]
-				_, resp, err := conn.Request(server.PushCmd, qrpc.NBFlag, d.Body)
+				requestID, resp, err := conn.Request(server.PushCmd, qrpc.NBFlag, d.Body)
+				logger.Info(uuid, "requestID", requestID, "cmd", server.PushCmd)
 				if err != nil {
 					logger.Error(uuid, addr, "Request err", err)
 					return
