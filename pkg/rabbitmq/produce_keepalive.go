@@ -97,8 +97,9 @@ var (
 // ProduceMsgKeepAlive will keep the underlying connection alive
 func ProduceMsgKeepAlive(url, exchange, routingKey, msg string) (err error) {
 
+	var conn *keepAlivedConn
 	for i := 1; i <= 3; i++ {
-		conn, err := getConn(url)
+		conn, err = getConn(url)
 		if err != nil {
 			continue
 		}
